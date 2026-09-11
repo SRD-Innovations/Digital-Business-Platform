@@ -152,10 +152,16 @@ Retail shops · Wholesale shops · Pharmacies · Restaurants · Hotels · Servic
 |---|---|---|
 | **Backend / API** | **FastAPI** (Python) | API-first, fast to build, auto OpenAPI docs, opens the door to analytics/forecasting later |
 | **Web (only platform)** | **Next.js** (TypeScript, React) | Serves both admin/back-office and the POS screen |
-| **Database** | **Supabase** (Postgres) | Relational data fits Postgres (inventory, ledgers, multi-branch stock); free file storage and optional Auth save early build time. FastAPI stays the only API surface |
-| **Infra** | AWS (ap-south-1, Mumbai) or local LK host later; Cloudflare in front; Docker + GitHub Actions | Lowest latency to Sri Lanka, standard low-maintenance CI/CD |
+| **JS runtime / packages** | **Bun** | Fast installs and scripts for the Next.js app in local dev and CI |
+| **Database** | **Supabase** (Postgres) | Relational data fits Postgres (inventory, ledgers, multi-branch stock); file storage and optional Auth save early build time. FastAPI stays the only API surface |
+| **Web hosting** | **Vercel** | Native Next.js hosting and PR preview deploys |
+| **API hosting** | **Railway** | FastAPI process, env vars, and staging without standing up AWS first |
+| **CI** | **GitHub Actions** | Lint / typecheck / test on pull requests into `develop` |
+| **Later infra** | AWS (`ap-south-1`, Mumbai) or a local LK host; Cloudflare in front | Lowest latency to Sri Lanka once traffic justifies it — not required to start the MVP |
 
 **API style:** REST, versioned (`/v1/...`), documented via OpenAPI/Swagger.
+
+Working detail for this repo: [`docs/stack.md`](./docs/stack.md) and [`docs/deployment.md`](./docs/deployment.md).
 
 ---
 

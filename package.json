@@ -1,0 +1,12 @@
+{
+  "name": "digital-business-platform",
+  "private": true,
+  "workspaces": ["apps/web"],
+  "scripts": {
+    "dev:web": "bun --filter web dev",
+    "build:web": "bun --filter web build",
+    "lint:web": "bun --filter web lint",
+    "typecheck:web": "bun --filter web typecheck"
+  },
+  "packageManager": "bun@1.2.21"
+}
