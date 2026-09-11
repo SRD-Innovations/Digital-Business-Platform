@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+.bun/
+
+# Next.js
+apps/web/.next/
+apps/web/out/
+apps/web/.turbo/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env.venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Logs and OS
+*.log
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Deploy
+.vercel
+.railway
+.supabase
+
+# Test / coverage
+coverage/
+htmlcov/
+.coverage
+
+# Misc
+*.local
+.cache/
