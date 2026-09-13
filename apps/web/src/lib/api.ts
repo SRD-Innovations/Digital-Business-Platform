@@ -21,11 +21,36 @@ export type User = {
   branch: Branch | null;
 };
 
-export type AuthResponse = {
-  access_token: string;
-  token_type: string;
-  user: User;
+export type Member = {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  branch: Branch | null;
 };
+
+export type Invite = {
+  id: string;
+  email: string;
+  role: string;
+  branch: Branch | null;
+  expires_at: string;
+  accepted_at: string | null;
+};
+
+export type InviteCreated = {
+  invite: Invite;
+  token: string;
+  join_path: string;
+};
+
+export const STAFF_ROLES = [
+  "manager",
+  "cashier",
+  "stock_keeper",
+  "accountant",
+  "production_staff",
+] as const;
 
 export class ApiError extends Error {
   status: number;
@@ -41,19 +66,34 @@ export async function apiFetch<T>(
   options: RequestInit & { token?: string } = {},
 ): Promise<T> {
   const { token, headers, ...rest } = options;
-  const response = await fetch(`${API_URL}${path}`, {
-    ...rest,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...headers,
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...rest,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+      },
+    });
+  } catch {
+    throw new ApiError(0, `Cannot reach the API at ${API_URL}`);
+  }
   if (!response.ok) {
-    let detail = "Request failed";
+    let detail = `Request failed (${response.status})`;
     try {
-      const body = (await response.json()) as { detail?: string };
-      if (body.detail) detail = body.detail;
+      const body = (await response.json()) as { detail?: unknown };
+      if (typeof body.detail === "string") {
+        detail = body.detail;
+      } else if (Array.isArray(body.detail)) {
+        detail = body.detail
+          .map((item) =>
+            typeof item === "object" && item && "msg" in item
+              ? String((item as { msg: string }).msg)
+              : JSON.stringify(item),
+          )
+          .join("; ");
+      }
     } catch {
       /* ignore */
     }

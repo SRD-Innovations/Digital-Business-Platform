@@ -36,6 +36,16 @@ Host: web → Vercel    API → Render    data → Supabase    CI → GitHub Act
 
 MVP uses a **shared database with `tenant_id`** on tenant-owned tables. Schema-per-tenant is more isolation than we need and slows every migration. Every API query that returns business data must filter by the JWT `tenant_id`. Email is unique globally so login stays a single lookup.
 
+## Row Level Security (RLS)
+
+Postgres (and therefore Supabase) can enforce **row-level security**: extra `WHERE` clauses the database itself applies, based on the current role and session settings. It is not “raw” security — the name is **row** level security.
+
+Without RLS, anyone who can query a table as `anon` / `authenticated` (the Supabase publishable key + Data API) sees **every tenant’s rows**. With RLS enabled and **no policies**, those roles see **nothing**. That is what the `enable_rls` migration does.
+
+FastAPI currently connects as a privileged DB role (`postgres` / connection-string user). That role **bypasses RLS**. Isolation for the app is still FastAPI filtering on `tenant_id`. RLS is a second lock on the door so a leaked publishable key cannot dump the database through PostgREST.
+
+Later we can add a non-bypass `dbp_app` role and policies like `tenant_id = current_setting('app.tenant_id')::uuid`, then set that setting per request. Not required to start local Docker.
+
 ## Roles (core)
 
 Owner/Admin · Manager · Cashier · Stock Keeper · Accountant · Production Staff, plus custom roles with per-module permissions. Multi-branch: stock and staff are per branch.
@@ -56,4 +66,4 @@ Local store: IndexedDB via Dexie.js or PGlite. Sync: device operation log (times
 
 ## What this branch is not
 
-No auth, POS, or schema yet. This is the skeleton so feature branches can add one MVP slice at a time. See [`mvp-build-plan.md`](./mvp-build-plan.md).
+Custom per-module permissions, password reset, and email delivery of invites. POS starts on `feature/pos-online`.

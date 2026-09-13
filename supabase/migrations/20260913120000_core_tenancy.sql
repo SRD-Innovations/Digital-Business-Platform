@@ -1,5 +1,7 @@
 -- Core multi-tenancy: shared database, tenant_id on every tenant-owned row.
 
+create extension if not exists pgcrypto;
+
 create table if not exists tenants (
   id uuid primary key default gen_random_uuid(),
   name text not null,

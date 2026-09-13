@@ -69,7 +69,13 @@ supabase login
 supabase link --project-ref fqbxexfiqihtmdfultth
 ```
 
-Run `supabase init` only once in this repo (keep files under `supabase/`). Apply `supabase/migrations/20260913120000_core_tenancy.sql` in the Supabase SQL editor before register/login will work.
+Run `supabase init` only once in this repo (keep files under `supabase/`). Apply migrations in order in the SQL editor before register/login will work:
+
+1. `supabase/migrations/20260913120000_core_tenancy.sql`
+2. `supabase/migrations/20260913130000_enable_rls.sql`
+3. `supabase/migrations/20260913140000_invites.sql`
+
+Local Postgres via Docker applies both automatically on first `docker compose up`.
 
 ## GitHub Actions
 

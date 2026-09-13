@@ -12,4 +12,4 @@ supabase/
 Project ref: `fqbxexfiqihtmdfultth`  
 Hosted URL: https://fqbxexfiqihtmdfultth.supabase.co
 
-Local CLI (`supabase start`) can wait until `feature/core-auth-tenancy` needs a schema. Do not invent tables on this branch.
+Local CLI is optional. `docker compose up` from the repo root starts Postgres and applies `supabase/migrations/` on first boot.

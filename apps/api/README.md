@@ -10,4 +10,6 @@ uvicorn app.main:app --reload --port 8000
 pytest
 ```
 
+Or from the repo root: `docker compose up --build` (API on port 8000, Postgres on 5432).
+
 Supabase is the database. This service is the only business API — do not expose PostgREST to the web app.

@@ -12,6 +12,13 @@ from app.core.db import get_db
 from app.core.security import decode_access_token
 from app.models.user import User
 
+STAFF_ROLES = ("manager", "cashier", "stock_keeper", "accountant", "production_staff")
+MANAGE_ROLES = ("owner", "manager")
+INVITABLE_BY_ROLE = {
+    "owner": STAFF_ROLES,
+    "manager": ("cashier", "stock_keeper", "accountant", "production_staff"),
+}
+
 bearer = HTTPBearer(auto_error=False)
 
 

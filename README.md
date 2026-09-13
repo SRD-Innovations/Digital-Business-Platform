@@ -66,7 +66,25 @@ See [`docs/git-workflow.md`](./docs/git-workflow.md) and [`CONTRIBUTING.md`](./C
 
 ## Local development
 
-Prerequisites: [Bun](https://bun.sh), Python 3.12+, [Supabase CLI](https://supabase.com/docs/guides/cli) (when the database work starts).
+Prerequisites: [Bun](https://bun.sh), Python 3.12+, and Docker (optional, for the full local stack).
+
+### Docker (API + web + Postgres)
+
+```bash
+docker compose up --build
+```
+
+Then:
+
+- Web: http://localhost:3000
+- API docs: http://localhost:8000/v1/docs
+- Postgres: `localhost:5432` (user/password/db: `postgres` / `postgres` / `dbp`)
+
+Stop with `Ctrl+C`, then `docker compose down`. Add `-v` to wipe the database volume.
+
+Migrations in `supabase/migrations/` are applied on the **first** Postgres start. After that, apply new SQL yourself or reset the volume.
+
+### Without Docker
 
 ```bash
 # Web

@@ -7,4 +7,6 @@ bun install
 bun run dev
 ```
 
+Or from the repo root: `docker compose up --build` (web on port 3000).
+
 Talks only to FastAPI (`NEXT_PUBLIC_API_URL`), not directly to Supabase for business operations.

@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from hashlib import sha256
 from typing import Any
 
 import bcrypt
@@ -28,3 +29,7 @@ def create_access_token(*, user_id: str, tenant_id: str, role: str) -> str:
 
 def decode_access_token(token: str) -> dict[str, Any]:
     return jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+
+
+def hash_invite_token(token: str) -> str:
+    return sha256(token.encode("utf-8")).hexdigest()

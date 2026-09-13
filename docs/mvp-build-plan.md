@@ -14,7 +14,7 @@ Work from `develop`. One branch at a time unless two people are clearly not touc
 | --- | --- | --- | --- |
 | 0 | `docs/initial-structure` | Foundation (repo) | This documentation and empty app skeletons |
 | 1 | `feature/foundation-ci-envs` | Foundation | Wired Vercel / Railway / Supabase projects, secrets in dashboards, green CI |
-| 2 | `feature/core-auth-tenancy` | Core platform | Tenants, JWT, RBAC, branches, invites. Decide `tenant_id` vs schema-per-tenant here |
+| 2 | `feature/core-auth-tenancy` | Core platform | Tenants, JWT, RBAC, branches, invites. Shared DB + `tenant_id` |
 | 3 | `feature/pos-online` | POS (online-first) | Checkout, split payments, discounts, returns, shift/cash reconciliation |
 | 4 | `feature/offline-sync` | Offline-first | IndexedDB/PGlite, service worker, sync queue, conflict log, last-synced UI. Protect this timeline |
 | 5 | `feature/erp-core` | ERP core | Inventory, purchasing, basic accounting, reporting |

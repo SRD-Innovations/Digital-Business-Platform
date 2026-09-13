@@ -28,6 +28,12 @@ export function SiteHeader() {
         {user ? (
           <>
             <Link href="/dashboard">Dashboard</Link>
+            {user.role === "owner" || user.role === "manager" ? (
+              <>
+                <Link href="/dashboard/team">Team</Link>
+                <Link href="/dashboard/branches">Branches</Link>
+              </>
+            ) : null}
             <button type="button" className="link-button" onClick={signOut}>
               Sign out
             </button>
