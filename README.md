@@ -40,7 +40,7 @@ The product spec lives in [`mvp.md`](./mvp.md). How we will ship it is in [`docs
 | Runtime / package manager | Bun |
 | API | FastAPI (Python), versioned REST `/v1` |
 | Database & storage | Supabase (Postgres) |
-| Web hosting | Vercel |
+| Web hosting | GitHub Pages (static export; Vercel Pro later) |
 | API hosting | Railway |
 | CI | GitHub Actions |
 
@@ -49,7 +49,7 @@ Details: [`docs/stack.md`](./docs/stack.md) · [`docs/architecture.md`](./docs/a
 ## Repository layout
 
 ```text
-apps/web       Next.js POS + back-office (Vercel)
+apps/web       Next.js POS + back-office (GitHub Pages for now)
 apps/api       FastAPI REST API (Railway)
 supabase/      schema, migrations, local config
 docs/          architecture, git workflow, deployment, MVP plan
