@@ -5,7 +5,13 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     api_env: str = "development"
-    api_cors_origins: str = "http://localhost:3000"
+    api_cors_origins: str = (
+        "http://localhost:3000,"
+        "https://srd-biz.vercel.app,"
+        "https://srd-innovations.github.io"
+    )
+    supabase_url: str = ""
+    database_url: str = ""
 
     @property
     def cors_origins(self) -> list[str]:

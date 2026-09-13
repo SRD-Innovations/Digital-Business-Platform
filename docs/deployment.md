@@ -1,33 +1,74 @@
 # Deployment
 
-| Surface | Host | Source |
+| Surface | Host | URL |
 | --- | --- | --- |
-| `apps/web` | Vercel | GitHub `develop` (previews) and `main` (production) |
-| `apps/api` | Railway | Same branches |
-| Database | Supabase (hosted project) | Migrations in `supabase/migrations` |
+| `apps/web` | Vercel | https://srd-biz.vercel.app |
+| `apps/api` | Render | https://digital-business-platform.onrender.com |
+| Database | Supabase | `fqbxexfiqihtmdfultth` (Mumbai / South Asia when available) |
 | CI | GitHub Actions | `.github/workflows/ci.yml` |
+
+Never commit database passwords or service-role keys. Put them only in Vercel / Render / local `.env` files.
 
 ## Vercel (web)
 
-1. New Vercel project from this GitHub repo.
-2. **Root directory:** `apps/web`
-3. **Install:** `bun install`
-4. **Build:** `bun run build`
-5. Framework: Next.js
-6. Env: `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+Live: [srd-biz.vercel.app](https://srd-biz.vercel.app)
 
-Preview deployments should follow pull requests into `develop`.
+Root directory `apps/web`. Install `bun install`. Build `bun run build`.
 
-## Railway (API)
+Set these **Production** environment variables, then Redeploy:
 
-1. New Railway service from this GitHub repo.
-2. **Root directory:** `apps/api`
-3. Start command (also in `apps/api/railway.toml`):  
-   `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-4. Health check: `GET /v1/health`
-5. Env: `API_ENV`, `API_CORS_ORIGINS`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+| Key | Value |
+| --- | --- |
+| `NEXT_PUBLIC_API_URL` | `https://digital-business-platform.onrender.com` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://fqbxexfiqihtmdfultth.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | the `sb_publishable_…` key from Supabase (Settings → API) |
 
-Do not put the Supabase service role key in the Next.js app.
+`NEXT_*` values are baked in at **build** time. Changing them requires a new Vercel deploy.
+
+## Render (API)
+
+Live: [digital-business-platform.onrender.com](https://digital-business-platform.onrender.com)
+
+| Field | Value |
+| --- | --- |
+| Root Directory | `apps/api` |
+| Build | `pip install -e .` |
+| Start | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Health | `/v1/health` |
+| Region | Singapore |
+
+Environment variables:
+
+| Key | Value |
+| --- | --- |
+| `PYTHON_VERSION` | `3.12.8` |
+| `API_ENV` | `production` |
+| `API_CORS_ORIGINS` | `https://srd-biz.vercel.app,http://localhost:3000` |
+| `SUPABASE_URL` | `https://fqbxexfiqihtmdfultth.supabase.co` |
+| `DATABASE_URL` | Postgres URI from Supabase. **URL-encode** `#` and `@` in the password (`#` → `%23`, `@` → `%40`) |
+
+If Render cannot reach the database (IPv6), use Supabase **Session pooler** (port 6543) instead of the direct `db.*:5432` host.
+
+Do not put `SUPABASE_SERVICE_ROLE_KEY` or `DATABASE_URL` in the Next.js / Vercel project.
+
+Check:
+
+- https://digital-business-platform.onrender.com/v1/health
+- https://digital-business-platform.onrender.com/v1/docs
+
+Free Render sleeps when idle; the first request can take ~1 minute.
+
+## Supabase
+
+Project ref: `fqbxexfiqihtmdfultth`  
+URL: https://fqbxexfiqihtmdfultth.supabase.co
+
+```bash
+supabase login
+supabase link --project-ref fqbxexfiqihtmdfultth
+```
+
+Run `supabase init` only once in this repo (keep files under `supabase/`). Schema starts on `feature/core-auth-tenancy`.
 
 ## GitHub Actions
 
@@ -36,15 +77,11 @@ On pull requests and pushes to `develop` / `main`:
 - Web: `bun install`, lint, typecheck, build
 - API: install `apps/api` extras, `pytest`
 
-Vercel and Railway own the deploy; CI is the gate before merge.
-
 ## Staging vs production
 
-Until environments are named in each dashboard:
+- **`develop`** → Vercel production branch (current) and Render auto-deploy
+- **`main`** → reserve for a later production cut if you split staging
 
-- **`develop`** → staging
-- **`main`** → production
+## Later
 
-## Later (not required to start MVP)
-
-AWS `ap-south-1` (Mumbai) or a Sri Lankan host, Cloudflare in front of the API, for latency once the product has real tenants. Record that move in this file when it happens.
+AWS `ap-south-1` (Mumbai) or a Sri Lankan host, Cloudflare in front of the API, when latency for real tenants requires it.

@@ -1,6 +1,6 @@
 # Digital Business Platform — web
 
-Next.js (TypeScript) app for POS and back-office. Package manager: **Bun**. Hosted on **Vercel**.
+Next.js (TypeScript) app for POS and back-office. Package manager: **Bun**. Hosted on **Vercel**: https://srd-biz.vercel.app
 
 ```bash
 bun install

@@ -11,3 +11,4 @@ def test_health() -> None:
     body = response.json()
     assert body["status"] == "ok"
     assert body["service"] == "dbp-api"
+    assert "database" in body
