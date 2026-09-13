@@ -1,6 +1,6 @@
 # Digital Business Platform — API
 
-FastAPI REST API (`/v1`). Hosted on **Railway**. OpenAPI: `/v1/docs`.
+FastAPI REST API (`/v1`). Hosted on **Render**: https://digital-business-platform.onrender.com — OpenAPI: `/v1/docs`.
 
 ```bash
 python3 -m venv .venv
