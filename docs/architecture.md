@@ -21,7 +21,7 @@ The Digital Business Platform is one **multi-tenant web application** with a POS
 │  FastAPI owns business logic; Supabase is data, not API │
 └─────────────────────────────────────────────────────────┘
 
-Host: web → Vercel    API → Railway    CI → GitHub Actions
+Host: web → Vercel    API → Render    data → Supabase    CI → GitHub Actions
 ```
 
 ## Design rules taken from the MVP spec
@@ -32,9 +32,9 @@ Host: web → Vercel    API → Railway    CI → GitHub Actions
 - **FastAPI is the only API.** Supabase Auth/Storage may save time, but clients do not talk to PostgREST for business operations. That keeps RBAC, tenancy, and later analytics in one place.
 - **Web only for MVP.** Flutter and Electron are shelved, not discarded. Hardware (barcode, thermal print) targets Chromium via WebUSB / WebHID / WebBluetooth.
 
-## Multi-tenancy (open decision)
+## Multi-tenancy
 
-`mvp.md` still needs a call: shared database with `tenant_id` vs schema-per-tenant. Until that is decided, new tables should assume a `tenant_id` column and never leak cross-tenant reads in API queries. Revisit before the auth/tenancy feature branch lands.
+MVP uses a **shared database with `tenant_id`** on tenant-owned tables. Schema-per-tenant is more isolation than we need and slows every migration. Every API query that returns business data must filter by the JWT `tenant_id`. Email is unique globally so login stays a single lookup.
 
 ## Roles (core)
 

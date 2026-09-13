@@ -46,6 +46,7 @@ Environment variables:
 | `API_CORS_ORIGINS` | `https://srd-biz.vercel.app,http://localhost:3000` |
 | `SUPABASE_URL` | `https://fqbxexfiqihtmdfultth.supabase.co` |
 | `DATABASE_URL` | Postgres URI from Supabase. **URL-encode** `#` and `@` in the password (`#` → `%23`, `@` → `%40`) |
+| `JWT_SECRET` | long random string (Render will not share the default) |
 
 If Render cannot reach the database (IPv6), use Supabase **Session pooler** (port 6543) instead of the direct `db.*:5432` host.
 
@@ -68,7 +69,7 @@ supabase login
 supabase link --project-ref fqbxexfiqihtmdfultth
 ```
 
-Run `supabase init` only once in this repo (keep files under `supabase/`). Schema starts on `feature/core-auth-tenancy`.
+Run `supabase init` only once in this repo (keep files under `supabase/`). Apply `supabase/migrations/20260913120000_core_tenancy.sql` in the Supabase SQL editor before register/login will work.
 
 ## GitHub Actions
 

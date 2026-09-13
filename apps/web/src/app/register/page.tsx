@@ -1,0 +1,73 @@
+"use client";
+
+import Link from "next/link";
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
+import { saveSession } from "@/lib/auth";
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setPending(true);
+    const form = new FormData(event.currentTarget);
+    try {
+      const auth = await apiFetch<AuthResponse>("/v1/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          business_name: form.get("business_name"),
+          full_name: form.get("full_name"),
+          email: form.get("email"),
+          password: form.get("password"),
+        }),
+      });
+      saveSession(auth);
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not create the business");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="page">
+      <main className="shell form-shell">
+        <p className="eyebrow">Get started</p>
+        <h1>Create your business</h1>
+        <p className="lede">One owner account, one Main branch. You can invite staff later.</p>
+        <form className="panel form" onSubmit={onSubmit}>
+          <label>
+            Business name
+            <input name="business_name" required minLength={2} placeholder="Nuwara Rice Mill" />
+          </label>
+          <label>
+            Your name
+            <input name="full_name" required minLength={2} placeholder="Amal Perera" />
+          </label>
+          <label>
+            Email
+            <input name="email" type="email" required placeholder="owner@business.lk" />
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" required minLength={8} />
+          </label>
+          {error ? <p className="form-error">{error}</p> : null}
+          <button type="submit" className="btn" disabled={pending}>
+            {pending ? "Creating…" : "Create business"}
+          </button>
+        </form>
+        <p className="form-foot">
+          Already have an account? <Link href="/login">Sign in</Link>
+        </p>
+      </main>
+    </div>
+  );
+}

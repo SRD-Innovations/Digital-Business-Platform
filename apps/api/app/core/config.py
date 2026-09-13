@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     )
     supabase_url: str = ""
     database_url: str = ""
+    jwt_secret: str = "change-me-in-development-use-a-long-random-value"
+    jwt_expire_minutes: int = 480
 
     @property
     def cors_origins(self) -> list[str]:

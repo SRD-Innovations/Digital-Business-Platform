@@ -31,8 +31,8 @@ Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feat
 - Bundled vs add-on Trade/Manufacturing — `feature/billing`
 - Trial card-upfront or not — `feature/billing`
 - Sync conflict rules — `feature/offline-sync`
-- Shared DB vs schema-per-tenant — `feature/core-auth-tenancy`
+- Shared DB vs schema-per-tenant — **closed: shared DB + `tenant_id`** (`feature/core-auth-tenancy`)
 
 ## Next concrete slice
 
-After this documentation branch merges: **`feature/foundation-ci-envs`** (connect Vercel, Railway, and a Supabase project) or **`feature/core-auth-tenancy`** if environments are created by hand first.
+After `feature/core-auth-tenancy` merges: **`feature/pos-online`**.

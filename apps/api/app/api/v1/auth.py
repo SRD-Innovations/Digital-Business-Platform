@@ -1,0 +1,77 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session, joinedload
+
+from app.api.deps import get_current_user, slugify, unique_slug
+from app.core.db import get_db
+from app.core.security import create_access_token, hash_password, verify_password
+from app.models.branch import Branch
+from app.models.tenant import Tenant
+from app.models.user import User
+from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserOut
+
+router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _token_for(user: User) -> TokenResponse:
+    return TokenResponse(
+        access_token=create_access_token(user_id=user.id, tenant_id=user.tenant_id, role=user.role),
+        user=UserOut.model_validate(user),
+    )
+
+
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+def register(body: RegisterRequest, db: Session = Depends(get_db)) -> TokenResponse:
+    email = body.email.lower()
+    existing = db.scalar(select(User).where(User.email == email))
+    if existing is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+
+    slug = slugify(body.business_name)
+    if db.scalar(select(Tenant.id).where(Tenant.slug == slug)):
+        slug = unique_slug(slug)
+
+    tenant = Tenant(name=body.business_name.strip(), slug=slug)
+    db.add(tenant)
+    db.flush()
+
+    branch = Branch(tenant_id=tenant.id, name="Main")
+    db.add(branch)
+    db.flush()
+
+    user = User(
+        tenant_id=tenant.id,
+        branch_id=branch.id,
+        email=email,
+        password_hash=hash_password(body.password),
+        full_name=body.full_name.strip(),
+        role="owner",
+    )
+    db.add(user)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered") from None
+    db.refresh(user)
+    user.tenant = tenant
+    user.branch = branch
+    return _token_for(user)
+
+
+@router.post("/login", response_model=TokenResponse)
+def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+    user = db.scalar(
+        select(User)
+        .options(joinedload(User.tenant), joinedload(User.branch))
+        .where(User.email == body.email.lower())
+    )
+    if user is None or not user.is_active or not verify_password(body.password, user.password_hash):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+    return _token_for(user)
+
+
+@router.get("/me", response_model=UserOut)
+def me(user: User = Depends(get_current_user)) -> User:
+    return user

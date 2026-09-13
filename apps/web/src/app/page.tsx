@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ApiStatus } from "@/components/ApiStatus";
 
 export default function HomePage() {
@@ -16,6 +18,14 @@ export default function HomePage() {
             <li>Web only, offline-first</li>
             <li>Next.js · FastAPI · Supabase · Bun · Vercel · Render</li>
           </ul>
+        </div>
+        <div className="home-actions">
+          <Link className="btn" href="/register">
+            Create business
+          </Link>
+          <Link className="btn btn-secondary" href="/login">
+            Sign in
+          </Link>
         </div>
         <ApiStatus />
       </main>
