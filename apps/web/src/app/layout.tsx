@@ -19,9 +19,9 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-  title: "SRD Biz",
+  title: "BizNet",
   description:
-    "SRD Biz — offline-first EPOS and ERP for Sri Lankan shops, trade, and manufacturing.",
+    "BizNet — offline-first EPOS and ERP for Sri Lankan shops, trade, and manufacturing. Working name; not locked yet.",
 };
 
 export default function RootLayout({

@@ -40,7 +40,7 @@ export default function LoginPage() {
       <div className="auth-split">
         <aside className="auth-brand">
           <div className="auth-brand-inner">
-            <p className="brand-mark">SRD Biz</p>
+            <p className="brand-mark">BizNet</p>
             <p>Your counter, stock room, and production floor — one sign-in.</p>
           </div>
         </aside>

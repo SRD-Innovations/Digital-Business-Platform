@@ -42,7 +42,7 @@ function JoinForm() {
       <div className="auth-split">
         <aside className="auth-brand">
           <div className="auth-brand-inner">
-            <p className="brand-mark">SRD Biz</p>
+            <p className="brand-mark">BizNet</p>
             <p>You were invited to a team. Set a password and you are on the floor.</p>
           </div>
         </aside>
