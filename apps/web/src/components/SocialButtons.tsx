@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 
 import { API_URL, apiFetch } from "@/lib/api";
+import { IconFacebook, IconGoogle, IconTikTok } from "@/components/Icons";
 
-const LABELS = {
-  google: "Continue with Google",
-  facebook: "Continue with Facebook",
-  tiktok: "Continue with TikTok",
-} as const;
+const PROVIDERS = [
+  { id: "google" as const, label: "Google", Icon: IconGoogle },
+  { id: "facebook" as const, label: "Facebook", Icon: IconFacebook },
+  { id: "tiktok" as const, label: "TikTok", Icon: IconTikTok },
+];
 
-type Provider = keyof typeof LABELS;
+type Provider = (typeof PROVIDERS)[number]["id"];
 
 type Props = {
   intent: "login" | "register" | "join";
@@ -43,16 +44,21 @@ export function SocialButtons({ intent, inviteToken, getBusinessName }: Props) {
 
   return (
     <div className="social-stack">
-      {(Object.keys(LABELS) as Provider[]).map((provider) => (
-        <button key={provider} type="button" className="btn btn-secondary" onClick={() => start(provider)}>
-          {LABELS[provider]}
-        </button>
-      ))}
-      {!configured ? (
-        <p className="muted">
-          These buttons work after Google, Facebook, and TikTok app keys are added on the API.
-        </p>
-      ) : null}
+      <div className="social-row">
+        {PROVIDERS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            type="button"
+            className="btn btn-secondary social-btn"
+            onClick={() => start(id)}
+            aria-label={`Continue with ${label}`}
+          >
+            <Icon />
+            <span className="social-btn-label">{label}</span>
+          </button>
+        ))}
+      </div>
+      {!configured ? <p className="muted social-hint">Connect social apps in API settings to enable.</p> : null}
     </div>
   );
 }

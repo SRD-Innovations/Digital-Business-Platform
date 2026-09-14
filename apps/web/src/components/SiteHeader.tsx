@@ -67,7 +67,7 @@ export function SiteHeader() {
         ) : (
           <>
             <Link href="/login">Sign in</Link>
-            <Link href="/#signup" className="nav-cta">
+            <Link href="/#signup" className="btn nav-cta">
               Create business
             </Link>
           </>

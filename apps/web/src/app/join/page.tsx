@@ -50,9 +50,6 @@ function JoinForm() {
           <main className="shell form-shell">
             <p className="eyebrow">Join team</p>
             <h1>Accept invite</h1>
-            <p className="lede">
-              Choose a name and password for phone sign-in, or continue with a social account.
-            </p>
             <form className="panel form" onSubmit={onSubmit}>
               <input type="hidden" name="token" value={token} />
               <label>

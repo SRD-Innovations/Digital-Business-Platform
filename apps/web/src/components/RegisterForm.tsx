@@ -49,13 +49,11 @@ export function RegisterForm({ compact = false, idPrefix = "" }: Props) {
         <>
           <p className="eyebrow">Get started</p>
           <h1>Create your business</h1>
-          <p className="lede">Owners start with email. Cashiers can join with a mobile invite.</p>
         </>
       ) : (
         <>
-          <p className="eyebrow">Start free trial</p>
-          <h1>Create your business</h1>
-          <p className="lede">Open in minutes. Invite staff by phone later.</p>
+          <p className="eyebrow">Free trial</p>
+          <h1>Join BizNet</h1>
         </>
       )}
       <form className="panel form" onSubmit={onSubmit} id={`${idPrefix}register-form`}>

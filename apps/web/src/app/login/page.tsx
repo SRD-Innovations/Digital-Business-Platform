@@ -46,10 +46,9 @@ export default function LoginPage() {
         </aside>
         <div className="auth-panel">
           <main className="shell form-shell">
-            <p className="eyebrow">Welcome back</p>
-            <h1>Sign in</h1>
-            <p className="lede">Use email, mobile number, or a linked social account.</p>
-            <form className="panel form" onSubmit={onSubmit}>
+        <p className="eyebrow">Welcome back</p>
+        <h1>Sign in</h1>
+        <form className="panel form" onSubmit={onSubmit}>
               <label>
                 Email or mobile number
                 <input
