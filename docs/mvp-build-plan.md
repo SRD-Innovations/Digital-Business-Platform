@@ -35,4 +35,4 @@ Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feat
 
 ## Next concrete slice
 
-After `feature/core-auth-tenancy` merges: **`feature/pos-online`**.
+`feature/pos-online` delivered online POS: catalog, shifts, checkout with split payments, park/hold, void/return, browser print receipt. Next: `feature/offline-sync`.

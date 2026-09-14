@@ -53,6 +53,79 @@ export type AuthResponse = {
   user: User;
 };
 
+export type Product = {
+  id: string;
+  name: string;
+  sku: string | null;
+  barcode: string | null;
+  unit_price: string;
+  stock_on_hand: string;
+  is_active: boolean;
+};
+
+export type SaleLine = {
+  id: string;
+  product_id: string | null;
+  product_name: string;
+  quantity: string;
+  unit_price: string;
+  line_total: string;
+};
+
+export type SalePayment = {
+  id: string;
+  method: string;
+  amount: string;
+};
+
+export type Sale = {
+  id: string;
+  receipt_number: string;
+  status: string;
+  branch_id: string | null;
+  cashier_user_id: string;
+  shift_id: string | null;
+  refund_of_sale_id: string | null;
+  subtotal: string;
+  discount_total: string;
+  total: string;
+  note: string | null;
+  created_at: string;
+  lines: SaleLine[];
+  payments: SalePayment[];
+};
+
+export type Shift = {
+  id: string;
+  branch_id: string | null;
+  opened_by_user_id: string;
+  closed_by_user_id: string | null;
+  opening_cash: string;
+  closing_cash: string | null;
+  expected_cash: string | null;
+  cash_sales_total: string;
+  card_sales_total: string;
+  credit_sales_total: string;
+  status: string;
+  opened_at: string;
+  closed_at: string | null;
+  note: string | null;
+  variance: string | null;
+};
+
+export type ParkedBill = {
+  id: string;
+  label: string;
+  branch_id: string | null;
+  cashier_user_id: string;
+  cart_json: {
+    discount_total?: string;
+    note?: string | null;
+    lines?: { product_id: string; quantity: string }[];
+  };
+  created_at: string;
+};
+
 export const STAFF_ROLES = [
   "manager",
   "cashier",
@@ -108,5 +181,12 @@ export async function apiFetch<T>(
     }
     throw new ApiError(response.status, detail);
   }
-  return (await response.json()) as T;
+  if (response.status === 204) {
+    return undefined as T;
+  }
+  const text = await response.text();
+  if (!text) {
+    return undefined as T;
+  }
+  return JSON.parse(text) as T;
 }
