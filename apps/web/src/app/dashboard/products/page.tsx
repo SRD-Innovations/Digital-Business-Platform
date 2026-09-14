@@ -13,6 +13,7 @@ import {
   type User,
 } from "@/lib/api";
 import { getStoredUser, getToken } from "@/lib/auth";
+import { canAccessPos } from "@/lib/roles";
 
 function canEditCatalog(role: string): boolean {
   return role === "owner" || role === "manager" || role === "stock_keeper";
@@ -155,9 +156,16 @@ export default function ProductsPage() {
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Products</h1>
         <p className="lede">
-          Catalog with wholesale tiers and optional batch/expiry tracking.{" "}
-          <Link href="/dashboard/pos">Open POS</Link>
-          {" · "}
+          Catalog with wholesale tiers and optional batch/expiry tracking.
+          {canAccessPos(user.role) ? (
+            <>
+              {" "}
+              <Link href="/dashboard/pos">Open POS</Link>
+              {" · "}
+            </>
+          ) : (
+            " "
+          )}
           <Link href="/dashboard/purchases">Purchases</Link>
         </p>
         <div className="stack">

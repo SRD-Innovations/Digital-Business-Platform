@@ -32,7 +32,7 @@ from app.services.inventory import apply_stock_change
 from app.services.pricing import allocate_batches_fefo, resolve_unit_price
 from app.models.trade import ProductBatch
 
-POS_ROLES = ("owner", "manager", "cashier")
+POS_ROLES = ("owner", "cashier")
 CATALOG_ROLES = ("owner", "manager", "stock_keeper")
 
 router = APIRouter(tags=["pos"])

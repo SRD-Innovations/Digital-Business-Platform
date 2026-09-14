@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { homePathForUser } from "@/lib/roles";
 import { SocialButtons } from "@/components/SocialButtons";
 
 type Props = {
@@ -34,7 +35,7 @@ export function RegisterForm({ idPrefix = "" }: Props) {
         }),
       });
       saveSession(auth);
-      router.push("/dashboard");
+      router.push(homePathForUser(auth.user));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not create the business");
     } finally {

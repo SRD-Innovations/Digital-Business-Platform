@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { homePathForUser } from "@/lib/roles";
 import { AuthShell } from "@/components/AuthShell";
 import { SocialButtons } from "@/components/SocialButtons";
 
@@ -30,7 +31,7 @@ function JoinForm() {
         }),
       });
       saveSession(auth);
-      router.push("/dashboard");
+      router.push(homePathForUser(auth.user));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not join");
     } finally {

@@ -6,12 +6,20 @@ import { usePathname } from "next/navigation";
 
 import { SESSION_EVENT, clearSession, getStoredUser } from "@/lib/auth";
 import type { User } from "@/lib/api";
-import { IconHome, IconLogout } from "@/components/Icons";
+import { homePathForUser } from "@/lib/roles";
+import {
+  hydrateSidebar,
+  subscribeSidebar,
+  toggleSidebar,
+} from "@/lib/sidebar";
+import { IconLogout } from "@/components/Icons";
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const onDashboard = pathname.startsWith("/dashboard");
 
   useEffect(() => {
     function refresh() {
@@ -27,6 +35,11 @@ export function SiteHeader() {
   }, [pathname]);
 
   useEffect(() => {
+    setSidebarCollapsed(hydrateSidebar());
+    return subscribeSidebar(setSidebarCollapsed);
+  }, []);
+
+  useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -40,14 +53,11 @@ export function SiteHeader() {
   }
 
   const brandLabel = user?.tenant.name?.trim() || "BizNet";
+  const homeHref = user ? homePathForUser(user) : "/";
 
   return (
     <header className="topbar" data-scrolled={scrolled ? "true" : "false"}>
-      <Link
-        href={user ? "/dashboard" : "/"}
-        className="brand"
-        title={user ? user.tenant.name : "BizNet"}
-      >
+      <Link href={homeHref} className="brand" title={user ? user.tenant.name : "BizNet"}>
         {user ? (
           brandLabel
         ) : (
@@ -59,14 +69,25 @@ export function SiteHeader() {
       <nav className="nav">
         {user ? (
           <>
-            <Link
-              href="/dashboard"
-              className="icon-btn"
-              title="Home"
-              aria-label="Home"
-            >
-              <IconHome />
-            </Link>
+            {onDashboard ? (
+              <button
+                type="button"
+                className="user-toggle"
+                onClick={() => toggleSidebar()}
+                title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+                aria-label={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
+                aria-pressed={!sidebarCollapsed}
+              >
+                {user.full_name}
+                <span className="user-toggle-hint">
+                  {sidebarCollapsed ? "Show menu" : "Hide menu"}
+                </span>
+              </button>
+            ) : (
+              <span className="user-toggle" aria-hidden="true">
+                {user.full_name}
+              </span>
+            )}
             <button
               type="button"
               className="icon-btn"

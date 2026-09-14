@@ -14,6 +14,7 @@ import {
   type User,
 } from "@/lib/api";
 import { getStoredUser, getToken } from "@/lib/auth";
+import { canAccessPos } from "@/lib/roles";
 import { printReceipt, receiptBusinessFromUser } from "@/lib/printReceipt";
 import { readCachedProducts } from "@/lib/offline/db";
 import {
@@ -26,10 +27,6 @@ import {
 
 type CartLine = { product: Product; quantity: number };
 type PayRow = { method: "cash" | "card" | "credit"; amount: string };
-
-function canUsePos(role: string): boolean {
-  return role === "owner" || role === "manager" || role === "cashier";
-}
 
 function money(value: number): string {
   return value.toFixed(2);
@@ -110,7 +107,7 @@ export default function PosPage() {
       router.replace("/login");
       return;
     }
-    if (!canUsePos(stored.role)) {
+    if (!canAccessPos(stored.role)) {
       router.replace("/dashboard");
       return;
     }

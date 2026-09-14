@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { ApiError, apiFetch, type User } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { homePathForUser } from "@/lib/roles";
 
 function OAuthCallback() {
   const router = useRouter();
@@ -25,7 +26,7 @@ function OAuthCallback() {
     apiFetch<User>("/v1/auth/me", { token: accessToken })
       .then((user) => {
         saveSession({ access_token: accessToken, token_type: "bearer", user });
-        router.replace("/dashboard");
+        router.replace(homePathForUser(user));
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : "Could not finish social login"));
   }, [params, router]);
