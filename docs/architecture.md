@@ -73,4 +73,4 @@ Local store: IndexedDB via Dexie.js or PGlite. Sync: device operation log (times
 
 ## What this branch is not
 
-Custom per-module permissions, password reset, and email delivery of invites. POS starts on `feature/pos-online`.
+Custom per-module permissions, password reset, email delivery of invites, social OAuth app keys, offline sync, real thermal WebUSB printers, loyalty, and SMS receipts.

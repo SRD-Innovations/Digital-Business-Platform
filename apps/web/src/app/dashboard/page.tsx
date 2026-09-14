@@ -43,10 +43,22 @@ export default function DashboardPage() {
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Dashboard</h1>
         <p className="lede">
-          Signed in as {user.full_name} ({user.role.replaceAll("_", " ")}). Core auth is in
-          place — POS is the next feature branch.
+          Signed in as {user.full_name} ({user.role.replaceAll("_", " ")}).
         </p>
         <div className="stack">
+          {(user.role === "owner" || user.role === "manager" || user.role === "cashier") ? (
+            <div className="panel">
+              <p className="panel-label">Point of sale</p>
+              <p className="muted">Shifts, split pay, park bills, returns, and print receipts.</p>
+              <p className="form-foot">
+                <Link href="/dashboard/pos">Open POS</Link>
+                {" · "}
+                <Link href="/dashboard/products">Products</Link>
+                {" · "}
+                <Link href="/dashboard/sales">Sales</Link>
+              </p>
+            </div>
+          ) : null}
           <div className="panel">
             <p className="panel-label">Branches</p>
             <ul className="row-list">
