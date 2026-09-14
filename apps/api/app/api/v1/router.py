@@ -9,12 +9,14 @@ from app.api.v1.manufacturing import router as manufacturing_router
 from app.api.v1.oauth import router as oauth_router
 from app.api.v1.pos import router as pos_router
 from app.api.v1.team import router as team_router
+from app.api.v1.tenant import router as tenant_router
 from app.api.v1.trade import router as trade_router
 
 api_v1 = APIRouter()
 api_v1.include_router(health_router, tags=["health"])
 api_v1.include_router(auth_router)
 api_v1.include_router(oauth_router)
+api_v1.include_router(tenant_router)
 api_v1.include_router(branches_router)
 api_v1.include_router(team_router)
 api_v1.include_router(pos_router)

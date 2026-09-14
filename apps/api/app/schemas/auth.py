@@ -28,8 +28,45 @@ class TenantOut(BaseModel):
     id: str
     name: str
     slug: str
+    legal_name: str | None = None
+    address_line1: str | None = None
+    address_line2: str | None = None
+    city: str | None = None
+    phone: str | None = None
+    email: str | None = None
+    tin: str | None = None
+    vat_number: str | None = None
 
     model_config = {"from_attributes": True}
+
+
+class TenantUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=2, max_length=200)
+    legal_name: str | None = Field(default=None, max_length=200)
+    address_line1: str | None = Field(default=None, max_length=200)
+    address_line2: str | None = Field(default=None, max_length=200)
+    city: str | None = Field(default=None, max_length=100)
+    phone: str | None = Field(default=None, max_length=32)
+    email: str | None = Field(default=None, max_length=320)
+    tin: str | None = Field(default=None, max_length=32)
+    vat_number: str | None = Field(default=None, max_length=32)
+
+    @field_validator(
+        "legal_name",
+        "address_line1",
+        "address_line2",
+        "city",
+        "phone",
+        "email",
+        "tin",
+        "vat_number",
+        mode="before",
+    )
+    @classmethod
+    def blank_to_none(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
 
 class BranchOut(BaseModel):

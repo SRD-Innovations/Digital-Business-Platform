@@ -36,4 +36,4 @@ Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feat
 
 ## Next concrete slice
 
-Feature branches through billing are on `develop`. Next: polish the English web UI for demos, then `feature/qa-pilot` (IRD/hardware/pilot) — or live PayHere wiring if you want payments next.
+On `feature/qa-pilot`: business profile (TIN/VAT/address) for receipts, shared 80mm print layout, barcode Enter-to-cart. Follow-ups: live PayHere, VAT line amounts on sales, WebUSB thermal, pilot with one Trade + one Manufacturing customer.

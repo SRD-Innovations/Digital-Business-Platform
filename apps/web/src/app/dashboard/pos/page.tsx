@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -14,6 +14,7 @@ import {
   type User,
 } from "@/lib/api";
 import { getStoredUser, getToken } from "@/lib/auth";
+import { printReceipt, receiptBusinessFromUser } from "@/lib/printReceipt";
 import { readCachedProducts } from "@/lib/offline/db";
 import {
   checkoutOnlineOrQueue,
@@ -41,37 +42,6 @@ function formatSynced(iso: string | null): string {
   } catch {
     return iso;
   }
-}
-
-function printReceipt(sale: Sale, business: string) {
-  const win = window.open("", "receipt", "width=360,height=640");
-  if (!win) return;
-  const lines = sale.lines
-    .map(
-      (line) =>
-        `<tr><td>${line.product_name}</td><td>${line.quantity}</td><td>${line.unit_price}</td><td>${line.line_total}</td></tr>`,
-    )
-    .join("");
-  const pays = sale.payments.map((p) => `<div>${p.method}: Rs ${p.amount}</div>`).join("");
-  win.document.write(`<!doctype html><html><head><title>${sale.receipt_number}</title>
-    <style>
-      body{font:14px/1.4 ui-monospace,monospace;padding:16px;color:#111}
-      h1{font-size:16px;margin:0 0 8px}
-      table{width:100%;border-collapse:collapse;margin:12px 0}
-      td{padding:2px 0}
-      .muted{color:#666;font-size:12px}
-      @media print{body{padding:0}}
-    </style></head><body>
-    <h1>${business}</h1>
-    <div class="muted">${sale.receipt_number} · ${sale.status}</div>
-    <table>${lines}</table>
-    <div>Subtotal Rs ${sale.subtotal}</div>
-    <div>Discount Rs ${sale.discount_total}</div>
-    <div><strong>Total Rs ${sale.total}</strong></div>
-    ${pays}
-    <script>window.onload=()=>{window.print();}</script>
-    </body></html>`);
-  win.document.close();
 }
 
 export default function PosPage() {
@@ -202,6 +172,31 @@ export default function PosPage() {
       }
       return [...current, { product, quantity: 1 }];
     });
+  }
+
+  function tryScanAdd(raw: string): boolean {
+    const code = raw.trim().toLowerCase();
+    if (!code) return false;
+    const byBarcode = products.find((p) => (p.barcode ?? "").toLowerCase() === code);
+    const bySku = products.find((p) => (p.sku ?? "").toLowerCase() === code);
+    const match = byBarcode ?? bySku;
+    if (!match) {
+      setError(`No product for barcode/SKU “${raw.trim()}”`);
+      return false;
+    }
+    if (!shift && sync.online) {
+      setError("Open a shift before scanning items");
+      return false;
+    }
+    addProduct(match);
+    setQuery("");
+    return true;
+  }
+
+  function onSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    tryScanAdd(query);
   }
 
   function setQuantity(productId: string, quantity: number) {
@@ -432,7 +427,9 @@ export default function PosPage() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Type to filter…"
+                onKeyDown={onSearchKeyDown}
+                placeholder="Type to filter, or scan + Enter"
+                autoComplete="off"
               />
             </label>
             <div className="panel">
@@ -586,7 +583,11 @@ export default function PosPage() {
                 <button
                   type="button"
                   className="btn btn-secondary"
-                  onClick={() => printReceipt(lastSale, user.tenant.name)}
+                  onClick={() =>
+                    printReceipt(lastSale, receiptBusinessFromUser(user), {
+                      cashierName: user.full_name,
+                    })
+                  }
                 >
                   Print receipt
                 </button>

@@ -5,6 +5,14 @@ export type Tenant = {
   id: string;
   name: string;
   slug: string;
+  legal_name: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  phone: string | null;
+  email: string | null;
+  tin: string | null;
+  vat_number: string | null;
 };
 
 export type Branch = {
