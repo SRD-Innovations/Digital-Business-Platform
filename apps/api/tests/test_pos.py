@@ -165,6 +165,31 @@ def test_park_resume_void_and_return(client: TestClient) -> None:
     assert closed.json()["variance"] == "250.00"
 
 
+def test_checkout_client_op_id_is_idempotent(client: TestClient) -> None:
+    token = _register(client, "idem@pos.lk")
+    _open_shift(client, token)
+    product = client.post(
+        "/v1/products",
+        headers=_auth_header(token),
+        json={"name": "Tea", "unit_price": "100.00", "stock_on_hand": "5"},
+    )
+    product_id = product.json()["id"]
+    payload = {
+        "client_op_id": "op-offline-abc-12345",
+        "device_id": "device-test-1",
+        "lines": [{"product_id": product_id, "quantity": "1"}],
+        "payments": [{"method": "cash", "amount": "100.00"}],
+    }
+    first = client.post("/v1/pos/checkout", headers=_auth_header(token), json=payload)
+    assert first.status_code == 201, first.text
+    second = client.post("/v1/pos/checkout", headers=_auth_header(token), json=payload)
+    assert second.status_code == 201, second.text
+    assert first.json()["id"] == second.json()["id"]
+    assert second.json()["client_op_id"] == "op-offline-abc-12345"
+    stock = client.get("/v1/products", headers=_auth_header(token))
+    assert Decimal(stock.json()[0]["stock_on_hand"]) == Decimal("4")
+
+
 def test_cashier_can_checkout_but_not_create_product(client: TestClient) -> None:
     owner = _register(client, "boss@pos.lk")
     _open_shift(client, owner)

@@ -30,6 +30,8 @@ class Sale(Base):
     refund_of_sale_id: Mapped[str | None] = mapped_column(
         GUID(), ForeignKey("sales.id", ondelete="SET NULL"), nullable=True
     )
+    client_op_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    device_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     receipt_number: Mapped[str] = mapped_column(String(32), nullable=False)
     status: Mapped[str] = mapped_column(String(16), nullable=False, default="completed")
     subtotal: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
