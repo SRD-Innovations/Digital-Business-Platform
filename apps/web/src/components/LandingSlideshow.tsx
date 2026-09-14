@@ -1,111 +1,34 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import Image from "next/image";
+import { useEffect, useState } from "react";
 
 const SLIDES = [
   {
-    title: "Counter sales",
-    tone: "a",
-    visual: "pos",
+    title: "Built for the counter",
+    image:
+      "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&w=1600&q=80",
+    alt: "Retail counter with a customer paying",
   },
   {
-    title: "Live stock",
-    tone: "b",
-    visual: "stock",
+    title: "Stock that stays honest",
+    image:
+      "https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&w=1600&q=80",
+    alt: "Warehouse aisles with inventory shelves",
   },
   {
-    title: "Offline ready",
-    tone: "c",
-    visual: "sync",
+    title: "Trade on your terms",
+    image:
+      "https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&w=1600&q=80",
+    alt: "Fresh market produce and shoppers",
   },
   {
-    title: "Make & trade",
-    tone: "d",
-    visual: "make",
+    title: "Make what you sell",
+    image:
+      "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1600&q=80",
+    alt: "Production floor and manufacturing work",
   },
 ] as const;
-
-function SlideVisual({
-  kind,
-  onInteract,
-}: {
-  kind: (typeof SLIDES)[number]["visual"];
-  onInteract: () => void;
-}) {
-  if (kind === "pos") {
-    return (
-      <button type="button" className="slide-art slide-art-btn" onClick={onInteract} aria-label="Next highlight">
-        <div className="art-card art-receipt">
-          <span className="art-line art-line-wide" />
-          <span className="art-line" />
-          <span className="art-line art-line-mid" />
-          <span className="art-total">Rs 4,250</span>
-        </div>
-        <div className="art-float art-scan">
-          <span />
-          <span />
-          <span />
-        </div>
-      </button>
-    );
-  }
-  if (kind === "stock") {
-    return (
-      <button type="button" className="slide-art slide-art-btn" onClick={onInteract} aria-label="Next highlight">
-        <div className="art-card art-chart">
-          <div className="art-bars">
-            <i style={{ "--h": "42%" } as CSSProperties} />
-            <i style={{ "--h": "68%" } as CSSProperties} />
-            <i style={{ "--h": "55%" } as CSSProperties} />
-            <i style={{ "--h": "88%" } as CSSProperties} />
-            <i style={{ "--h": "72%" } as CSSProperties} />
-          </div>
-          <div className="art-spark">
-            <svg viewBox="0 0 120 36" preserveAspectRatio="none">
-              <path
-                d="M0 28 C20 26 28 8 48 12 C68 16 78 30 100 6 L120 6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-              />
-            </svg>
-          </div>
-        </div>
-      </button>
-    );
-  }
-  if (kind === "sync") {
-    return (
-      <button type="button" className="slide-art slide-art-btn" onClick={onInteract} aria-label="Next highlight">
-        <div className="art-card art-sync">
-          <div className="art-pulse" />
-          <div className="art-queue">
-            <span />
-            <span />
-            <span />
-          </div>
-          <p className="art-caption">Queue · Sync</p>
-        </div>
-      </button>
-    );
-  }
-  return (
-    <button type="button" className="slide-art slide-art-btn" onClick={onInteract} aria-label="Next highlight">
-      <div className="art-card art-bom">
-        <div className="art-nodes">
-          <span className="art-node" />
-          <span className="art-node art-node-mid" />
-          <span className="art-node" />
-        </div>
-        <div className="art-bars art-bars-sm">
-          <i style={{ "--h": "50%" } as CSSProperties} />
-          <i style={{ "--h": "75%" } as CSSProperties} />
-          <i style={{ "--h": "40%" } as CSSProperties} />
-        </div>
-      </div>
-    </button>
-  );
-}
 
 export function LandingSlideshow() {
   const [index, setIndex] = useState(0);
@@ -115,47 +38,65 @@ export function LandingSlideshow() {
     if (paused) return;
     const id = window.setInterval(() => {
       setIndex((current) => (current + 1) % SLIDES.length);
-    }, 4800);
+    }, 5500);
     return () => window.clearInterval(id);
   }, [paused]);
 
-  function next() {
-    setIndex((current) => (current + 1) % SLIDES.length);
+  function goTo(next: number) {
+    setIndex(next);
     setPaused(true);
-    window.setTimeout(() => setPaused(false), 8000);
+    window.setTimeout(() => setPaused(false), 9000);
   }
 
   const slide = SLIDES[index];
 
   return (
-    <div className="landing-stage" data-tone={slide.tone}>
-      <div className="landing-stage-glow" aria-hidden />
-      <div className="landing-orb landing-orb-a" aria-hidden />
-      <div className="landing-orb landing-orb-b" aria-hidden />
-      <div className="landing-stage-inner">
+    <div className="landing-stage landing-stage-photos">
+      <div className="landing-photos" aria-hidden>
+        {SLIDES.map((item, i) => (
+          <div
+            key={item.image}
+            className="landing-photo"
+            data-active={i === index ? "true" : "false"}
+          >
+            <Image
+              src={item.image}
+              alt=""
+              fill
+              priority={i === 0}
+              sizes="(max-width: 900px) 100vw, 55vw"
+              className="landing-photo-img"
+            />
+          </div>
+        ))}
+        <div className="landing-photo-shade" />
+      </div>
+
+      <div className="landing-stage-inner landing-welcome">
         <div className="landing-stage-top">
           <p className="landing-brand">BizNet</p>
           <p className="landing-kicker">SRD Innovations</p>
         </div>
 
         <div className="landing-stage-mid" key={slide.title}>
-          <SlideVisual kind={slide.visual} onInteract={next} />
-          <h2 className="landing-slide-title">{slide.title}</h2>
+          <p className="landing-welcome-label">Welcome</p>
+          <h2 className="landing-slide-title">Welcome to your business OS</h2>
+          <p className="landing-welcome-body">
+            Sell, stock, and grow from one calm workspace — built for Sri Lankan shops, trade, and
+            production floors.
+          </p>
+          <p className="landing-slide-caption">{slide.title}</p>
         </div>
 
-        <div className="landing-dots" role="tablist" aria-label="Highlights">
+        <div className="landing-dots" role="tablist" aria-label="Gallery">
           {SLIDES.map((item, i) => (
             <button
-              key={item.title}
+              key={item.image}
               type="button"
               className="landing-dot"
               data-active={i === index ? "true" : "false"}
-              aria-label={item.title}
-              onClick={() => {
-                setIndex(i);
-                setPaused(true);
-                window.setTimeout(() => setPaused(false), 8000);
-              }}
+              aria-label={item.alt}
+              onClick={() => goTo(i)}
             />
           ))}
         </div>
