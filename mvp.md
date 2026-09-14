@@ -39,7 +39,7 @@ Retail shops · Wholesale shops · Pharmacies · Restaurants · Hotels · Servic
 **Common traits across all segments, driving core design decisions:**
 - Price-sensitive — competing against "a notebook and a calculator," not enterprise software
 - Low tolerance for complexity — daily operator is often not tech-trained; onboarding must be near-zero-training
-- Sinhala/Tamil is not optional — many owners and staff are more comfortable in local language than English
+- **MVP UI language is English only.** Sinhala/Tamil remain important for Sri Lanka and are deferred post-MVP
 - Connectivity is unreliable, not just slow — power cuts and patchy mobile data are routine, especially outside Colombo. This is why offline-first is the platform's core differentiator, not a technical footnote
 - Trust matters more than feature count — reliability and simplicity win more customers early than a long feature list
 
@@ -52,7 +52,7 @@ Retail shops · Wholesale shops · Pharmacies · Restaurants · Hotels · Servic
 - **Build** only two module families first, chosen because together they cover the most ground with the least duplicated work
 
 ### In scope for MVP
-- Core platform (roles, branches, auth, localization)
+- Core platform (roles, branches, auth; English UI; LKR)
 - POS module
 - ERP core (inventory, purchasing, basic accounting, reporting)
 - **Trade family module** (covers Retail, Wholesale, Pharmacy)
@@ -61,6 +61,7 @@ Retail shops · Wholesale shops · Pharmacies · Restaurants · Hotels · Servic
 - Web app only, offline-first
 
 ### Explicitly out of scope for MVP
+- Sinhala / Tamil UI and receipts (English only for MVP; multilingual post-MVP)
 - Native mobile app (Flutter) and desktop app (Electron) — shelved
 - Hospitality module family (Restaurants, Hotels) — Phase 2, genuinely different booking/table/room logic deserves dedicated build time
 - Services module family (Salons, repair shops, consultancies) — Phase 2/3, appointment/job-based logic
@@ -78,11 +79,14 @@ Retail shops · Wholesale shops · Pharmacies · Restaurants · Hotels · Servic
 - Custom roles with granular, per-module permissions
 - Multi-branch support — per-branch stock and staff
 
-**Localization**
-- LKR currency, Sri Lankan VAT/NBT/SVAT handling
-- Sinhala, Tamil, English UI and receipts
-- Local payment gateway integration (PayHere, FriMi, LankaPay, Genie, bank QR)
-- IRD-compliant invoice/tax formats
+**Locale & payments (MVP)**
+- English UI and receipts only
+- LKR currency; Sri Lankan VAT/NBT/SVAT handling (formats can deepen in pilot)
+- Local payment gateway integration (PayHere first; FriMi, LankaPay, Genie, bank QR later)
+- IRD-compliant invoice/tax formats (pilot / hardening)
+
+**Locale (post-MVP)**
+- Sinhala and Tamil UI and receipts
 
 **Notifications & audit**
 - Low stock, payment due, shift-close alerts (SMS / WhatsApp / push)
@@ -186,12 +190,13 @@ Working detail for this repo: [`docs/stack.md`](./docs/stack.md) and [`docs/depl
 5. **ERP core** — inventory, purchasing, accounting basics, reporting dashboards
 6. **Module families: Trade & Manufacturing** — vertical-specific logic layered on the stable core
 7. **Subscription & billing layer** — trial logic, plan tiers, payment gateway integration, super-admin panel
-8. **Localization, QA & pilot launch** — Sinhala/Tamil translation, IRD tax formats, real hardware testing, pilot with a real Trade customer and a real Manufacturing customer before wider launch
+8. **QA & pilot launch** — English-only UI polish, IRD tax formats, real hardware testing, pilot with a real Trade customer and a real Manufacturing customer before wider launch
 
 ---
 
 ## 9. Post-MVP Roadmap
 
+- Sinhala / Tamil UI and receipts
 - Hospitality module family (Restaurants, Hotels)
 - Services module family (Salons, repair shops, consultancies)
 - Marketplace (vendor/buyer), commission-based revenue

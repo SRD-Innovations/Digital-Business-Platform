@@ -13,7 +13,7 @@ Price-sensitive Sri Lankan operators who today run on a notebook and a calculato
 Common constraints that drive the design:
 
 - Unreliable connectivity and power cuts — the app must keep working offline
-- Sinhala, Tamil, and English are all first-class
+- **MVP is English only**; Sinhala and Tamil are planned after MVP
 - Daily operators are often not tech-trained — onboarding must stay near zero-training
 - Trust and reliability beat a long feature list
 
@@ -21,7 +21,7 @@ Common constraints that drive the design:
 
 | Area | In MVP |
 | --- | --- |
-| Core platform | Auth, roles, multi-branch, localisation (LKR, tax formats) |
+| Core platform | Auth, roles, multi-branch, English UI, LKR |
 | POS | Fast checkout, split payments, shifts, receipts |
 | ERP core | Inventory, purchasing, basic accounting, reporting |
 | Trade family | Retail / wholesale / pharmacy (barcode, batches, pricing tiers) |

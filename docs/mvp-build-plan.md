@@ -21,9 +21,9 @@ Work from `develop`. One branch at a time unless two people are clearly not touc
 | 6 | `feature/module-trade` | Trade family | High-SKU, price lists, wholesale tiers, pharmacy batch/expiry |
 | 7 | `feature/module-manufacturing` | Manufacturing family | BOM, conversion, yield/wastage, batch costing |
 | 8 | `feature/billing` | Subscription layer | Trial, plans, PayHere (and peers), super-admin |
-| 9 | `feature/localisation-pilot` | Localisation, QA, pilot | Sinhala/Tamil, IRD formats, hardware, one Trade + one Manufacturing pilot |
+| 9 | `feature/qa-pilot` | QA & pilot | English UI polish, IRD formats, hardware, one Trade + one Manufacturing pilot |
 
-Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feature/pos-shifts`). Do not skip ahead to Hospitality, Services, marketplace, Flutter, or Electron.
+Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feature/pos-shifts`). Do not skip ahead to Hospitality, Services, marketplace, Flutter, Electron, or Sinhala/Tamil UI.
 
 ## Open decisions to close on the matching branch
 
@@ -32,7 +32,8 @@ Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feat
 - Trial card-upfront or not — `feature/billing`
 - Sync conflict rules — `feature/offline-sync`
 - Shared DB vs schema-per-tenant — **closed: shared DB + `tenant_id`** (`feature/core-auth-tenancy`)
+- Multilingual UI — **deferred post-MVP; English only for now**
 
 ## Next concrete slice
 
-`feature/billing` first cut: plan catalog, 21-day trial on register, subscribe (MVP activate without live charge), PayHere checkout stub, branch/user plan limits, and platform-admin tenant list. Next after this branch: `feature/localisation-pilot`.
+Feature branches through billing are on `develop`. Next: polish the English web UI for demos, then `feature/qa-pilot` (IRD/hardware/pilot) — or live PayHere wiring if you want payments next.
