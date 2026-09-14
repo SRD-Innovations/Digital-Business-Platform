@@ -62,7 +62,8 @@ export default function DashboardPage() {
           {(user.role === "owner" ||
             user.role === "manager" ||
             user.role === "stock_keeper" ||
-            user.role === "accountant") ? (
+            user.role === "accountant" ||
+            user.role === "production_staff") ? (
             <div className="panel">
               <p className="panel-label">ERP</p>
               <p className="muted">Suppliers, stock receipts, inventory movements, and sales totals.</p>
@@ -84,6 +85,20 @@ export default function DashboardPage() {
                   <>
                     {" · "}
                     <Link href="/dashboard/inventory">Inventory</Link>
+                  </>
+                )}
+                {(user.role === "owner" ||
+                  user.role === "manager" ||
+                  user.role === "production_staff" ||
+                  user.role === "stock_keeper" ||
+                  user.role === "accountant") && (
+                  <>
+                    {(user.role === "owner" ||
+                      user.role === "manager" ||
+                      user.role === "stock_keeper" ||
+                      user.role === "accountant") &&
+                      " · "}
+                    <Link href="/dashboard/manufacturing">Manufacturing</Link>
                   </>
                 )}
               </p>
