@@ -7,7 +7,7 @@ export function LandingSlideshow() {
     <div className="landing-stage landing-stage-hero">
       <div className="landing-hero-media" aria-hidden>
         <Image
-          src="/landing-page.png"
+          src="/landing-page.jpeg"
           alt=""
           fill
           priority
