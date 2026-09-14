@@ -41,7 +41,10 @@ export async function loadProductsForPos(
     const cached = await readCachedProducts(tenantId);
     if (cached.length) {
       return {
-        products: cached.map(({ tenant_id: _t, ...product }) => product),
+        products: cached.map(({ tenant_id: _t, ...product }) => ({
+          ...product,
+          track_batches: product.track_batches ?? false,
+        })),
         fromCache: true,
       };
     }

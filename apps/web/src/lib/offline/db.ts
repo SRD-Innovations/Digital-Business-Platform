@@ -10,6 +10,7 @@ export type CachedProduct = {
   barcode: string | null;
   unit_price: string;
   stock_on_hand: string;
+  track_batches: boolean;
   is_active: boolean;
   tenant_id: string;
 };
@@ -90,7 +91,10 @@ export async function readCachedProducts(tenantId: string): Promise<CachedProduc
   const tx = db.transaction("products", "readonly");
   const rows = await req(tx.objectStore("products").index("tenant_id").getAll(tenantId));
   db.close();
-  return rows;
+  return rows.map((row) => ({
+    ...row,
+    track_batches: Boolean(row.track_batches),
+  }));
 }
 
 export async function adjustCachedStock(

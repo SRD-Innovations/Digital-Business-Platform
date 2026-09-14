@@ -7,6 +7,7 @@ from app.core.db import get_db
 from app.models.branch import Branch
 from app.models.user import User
 from app.schemas.auth import BranchCreate, BranchOut
+from app.services.billing import assert_can_add_branch
 
 router = APIRouter(prefix="/branches", tags=["branches"])
 
@@ -25,6 +26,7 @@ def create_branch(
     user: User = Depends(require_roles(*MANAGE_ROLES)),
     db: Session = Depends(get_db),
 ) -> Branch:
+    assert_can_add_branch(db, user.tenant_id)
     name = body.name.strip()
     existing = db.scalar(
         select(Branch.id).where(Branch.tenant_id == user.tenant_id, Branch.name == name)

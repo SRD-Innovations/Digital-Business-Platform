@@ -22,10 +22,17 @@ class Settings(BaseSettings):
     facebook_client_secret: str = ""
     tiktok_client_key: str = ""
     tiktok_client_secret: str = ""
+    payhere_merchant_id: str = ""
+    payhere_merchant_secret: str = ""
+    platform_admin_emails: str = ""
 
     @property
     def cors_origins(self) -> list[str]:
         return [origin.strip() for origin in self.api_cors_origins.split(",") if origin.strip()]
+
+    @property
+    def platform_admin_email_set(self) -> set[str]:
+        return {email.strip().lower() for email in self.platform_admin_emails.split(",") if email.strip()}
 
 
 settings = Settings()

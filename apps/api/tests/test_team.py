@@ -21,6 +21,12 @@ def _register(client: TestClient, email: str = "owner@mill.lk") -> str:
 
 def test_owner_creates_branch_and_invites_cashier(client: TestClient) -> None:
     token = _register(client)
+    upgraded = client.post(
+        "/v1/billing/subscribe",
+        headers=_auth_header(token),
+        json={"plan_code": "standard", "billing_interval": "monthly"},
+    )
+    assert upgraded.status_code == 200, upgraded.text
     branch = client.post(
         "/v1/branches",
         headers=_auth_header(token),

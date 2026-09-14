@@ -35,4 +35,4 @@ Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feat
 
 ## Next concrete slice
 
-`feature/module-manufacturing` first cut: BOM, production runs (consume components / produce finished goods), yield & wastage %, and simple batch unit cost from component list prices. Next after this branch: `feature/billing`.
+`feature/billing` first cut: plan catalog, 21-day trial on register, subscribe (MVP activate without live charge), PayHere checkout stub, branch/user plan limits, and platform-admin tenant list. Next after this branch: `feature/localisation-pilot`.

@@ -18,8 +18,40 @@ export type User = {
   phone: string | null;
   full_name: string;
   role: string;
+  is_platform_admin: boolean;
   tenant: Tenant;
   branch: Branch | null;
+};
+
+export type Plan = {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  max_branches: number;
+  max_users: number;
+  includes_trade: boolean;
+  includes_manufacturing: boolean;
+  price_monthly_lkr: string;
+  price_yearly_lkr: string;
+};
+
+export type Subscription = {
+  id: string;
+  status: string;
+  billing_interval: string;
+  trial_ends_at: string | null;
+  current_period_end: string | null;
+  plan: Plan;
+};
+
+export type AdminTenant = {
+  id: string;
+  name: string;
+  slug: string;
+  created_at: string;
+  subscription_status: string | null;
+  plan_code: string | null;
 };
 
 export type Member = {

@@ -28,6 +28,7 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(200), nullable=False)
     role: Mapped[str] = mapped_column(String(32), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_platform_admin: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), default=lambda: datetime.now(UTC)
     )

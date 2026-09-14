@@ -128,6 +128,21 @@ export default function DashboardPage() {
               </p>
             </div>
           ) : null}
+          {(canManage(user.role) || user.is_platform_admin) ? (
+            <div className="panel">
+              <p className="panel-label">Billing</p>
+              <p className="muted">Trial status, plan limits, and PayHere checkout stub.</p>
+              <p className="form-foot">
+                <Link href="/dashboard/billing">Plans & subscription</Link>
+                {user.is_platform_admin ? (
+                  <>
+                    {" · "}
+                    <Link href="/dashboard/admin">Platform admin</Link>
+                  </>
+                ) : null}
+              </p>
+            </div>
+          ) : null}
         </div>
       </main>
     </div>

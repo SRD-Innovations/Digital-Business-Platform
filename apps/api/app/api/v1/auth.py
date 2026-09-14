@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_current_user, slugify, unique_slug
+from app.core.config import settings
 from app.core.db import get_db
 from app.core.phone import looks_like_phone, normalize_lk_phone
 from app.core.security import create_access_token, hash_password, verify_password
@@ -11,6 +12,7 @@ from app.models.branch import Branch
 from app.models.tenant import Tenant
 from app.models.user import User
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse, UserOut
+from app.services.billing import start_trial_subscription
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -36,6 +38,8 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> TokenRespo
     tenant = Tenant(name=body.business_name.strip(), slug=slug)
     db.add(tenant)
     db.flush()
+
+    start_trial_subscription(db, tenant.id)
 
     branch = Branch(tenant_id=tenant.id, name="Main")
     db.add(branch)
@@ -76,6 +80,10 @@ def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
         or not verify_password(body.password, user.password_hash)
     ):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid login or password")
+    if user.email and user.email.lower() in settings.platform_admin_email_set and not user.is_platform_admin:
+        user.is_platform_admin = True
+        db.commit()
+        db.refresh(user)
     return _token_for(user)
 
 
