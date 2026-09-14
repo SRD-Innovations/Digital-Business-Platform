@@ -128,6 +128,15 @@ export default function DashboardPage() {
               </p>
             </div>
           ) : null}
+          {canManage(user.role) ? (
+            <div className="panel">
+              <p className="panel-label">Business</p>
+              <p className="muted">Trading name, address, TIN, and VAT for printed receipts.</p>
+              <p className="form-foot">
+                <Link href="/dashboard/settings">Business settings</Link>
+              </p>
+            </div>
+          ) : null}
           {(canManage(user.role) || user.is_platform_admin) ? (
             <div className="panel">
               <p className="panel-label">Billing</p>

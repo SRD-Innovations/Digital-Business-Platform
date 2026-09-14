@@ -187,7 +187,7 @@ export default function ProductsPage() {
                 ))}
               </ul>
             ) : (
-              <p className="muted">No products yet</p>
+              <p className="muted">No products yet. Add your first SKU above to sell in POS.</p>
             )}
           </div>
 

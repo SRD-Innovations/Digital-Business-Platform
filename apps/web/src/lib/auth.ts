@@ -26,3 +26,7 @@ export function getStoredUser(): User | null {
     return null;
   }
 }
+
+export function setStoredUser(user: User): void {
+  window.localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
