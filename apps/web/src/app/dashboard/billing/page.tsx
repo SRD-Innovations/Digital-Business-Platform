@@ -72,18 +72,11 @@ export default function BillingPage() {
   }
 
   if (!user) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   return (
-    <div className="page">
-      <main className="shell shell-wide">
+    <main className="shell shell-wide">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Billing</h1>
         <p className="lede">
@@ -159,6 +152,5 @@ export default function BillingPage() {
         {error ? <p className="form-error">{error}</p> : null}
         {message ? <p className="muted">{message}</p> : null}
       </main>
-    </div>
   );
 }

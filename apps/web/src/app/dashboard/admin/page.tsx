@@ -31,18 +31,11 @@ export default function AdminPage() {
   }, [router]);
 
   if (!user) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   return (
-    <div className="page">
-      <main className="shell shell-wide">
+    <main className="shell shell-wide">
         <p className="eyebrow">Platform</p>
         <h1>Admin</h1>
         <p className="lede">
@@ -70,6 +63,5 @@ export default function AdminPage() {
           )}
         </div>
       </main>
-    </div>
   );
 }

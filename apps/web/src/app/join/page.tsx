@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { homePathForUser } from "@/lib/roles";
+import { AuthShell } from "@/components/AuthShell";
 import { SocialButtons } from "@/components/SocialButtons";
 
 function JoinForm() {
@@ -29,7 +31,7 @@ function JoinForm() {
         }),
       });
       saveSession(auth);
-      router.push("/dashboard");
+      router.push(homePathForUser(auth.user));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not join");
     } finally {
@@ -38,37 +40,33 @@ function JoinForm() {
   }
 
   return (
-    <div className="page">
-      <main className="shell form-shell">
-        <p className="eyebrow">Join team</p>
-        <h1>Accept invite</h1>
-        <p className="lede">
-          Set a name and password to sign in with your phone later, or join with Google, Facebook, or
-          TikTok if you already use those apps.
-        </p>
-        <form className="panel form" onSubmit={onSubmit}>
-          <input type="hidden" name="token" value={token} />
-          <label>
-            Your name
-            <input name="full_name" required minLength={2} />
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" required minLength={8} />
-          </label>
-          {error ? <p className="form-error">{error}</p> : null}
-          <button className="btn" type="submit" disabled={pending || !token}>
-            {pending ? "Joining…" : "Join business"}
-          </button>
-        </form>
-        {token ? (
-          <>
-            <div className="or-rule">or</div>
-            <SocialButtons intent="join" inviteToken={token} />
-          </>
-        ) : null}
-      </main>
-    </div>
+    <AuthShell>
+      <p className="eyebrow">Join team</p>
+      <h1>Accept invite</h1>
+      <form className="panel form" onSubmit={onSubmit}>
+        <input type="hidden" name="token" value={token} />
+        <label>
+          Your name
+          <input name="full_name" required minLength={2} autoComplete="name" />
+        </label>
+        <label>
+          Password
+          <input name="password" type="password" required minLength={8} autoComplete="new-password" />
+        </label>
+        {error ? <p className="form-error">{error}</p> : null}
+        <button className="btn" type="submit" disabled={pending || !token}>
+          {pending ? "Joining…" : "Join business"}
+        </button>
+      </form>
+      {token ? (
+        <>
+          <div className="or-rule">or</div>
+          <SocialButtons intent="join" inviteToken={token} />
+        </>
+      ) : (
+        <p className="form-error">This invite link is missing a token.</p>
+      )}
+    </AuthShell>
   );
 }
 

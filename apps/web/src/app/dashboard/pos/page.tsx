@@ -14,6 +14,7 @@ import {
   type User,
 } from "@/lib/api";
 import { getStoredUser, getToken } from "@/lib/auth";
+import { canAccessPos } from "@/lib/roles";
 import { printReceipt, receiptBusinessFromUser } from "@/lib/printReceipt";
 import { readCachedProducts } from "@/lib/offline/db";
 import {
@@ -26,10 +27,6 @@ import {
 
 type CartLine = { product: Product; quantity: number };
 type PayRow = { method: "cash" | "card" | "credit"; amount: string };
-
-function canUsePos(role: string): boolean {
-  return role === "owner" || role === "manager" || role === "cashier";
-}
 
 function money(value: number): string {
   return value.toFixed(2);
@@ -110,7 +107,7 @@ export default function PosPage() {
       router.replace("/login");
       return;
     }
-    if (!canUsePos(stored.role)) {
+    if (!canAccessPos(stored.role)) {
       router.replace("/dashboard");
       return;
     }
@@ -346,30 +343,21 @@ export default function PosPage() {
   }
 
   if (!user) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   return (
-    <div className="page">
-      <main className="shell shell-wide">
-        <p className="eyebrow">{user.tenant.name}</p>
-        <h1>POS</h1>
-        <p className="lede">
-          Open a shift, sell, split payments, park bills, then print the receipt.{" "}
-          <Link href="/dashboard/products">Products</Link>
-          {" · "}
-          <Link href="/dashboard/sales">Sales</Link>
-        </p>
+    <main className="shell shell-wide">
+      <p className="eyebrow">{user.tenant.name}</p>
+      <h1>Point of sale</h1>
+      <p className="lede">
+        Open a shift, scan or tap products, take split payments, and print the receipt.
+      </p>
 
-        <div className="panel sync-status" style={{ marginBottom: "1.25rem" }}>
+      <div className="pos-status">
+        <div>
           <p className="panel-label">Sync</p>
-          <p className="muted">
+          <p className="muted" style={{ margin: 0 }}>
             {sync.online ? "Online" : "Offline"}
             {" · "}
             pending {sync.pendingCount}
@@ -378,224 +366,236 @@ export default function PosPage() {
             {fromCache ? " · catalog from this device" : ""}
           </p>
           {sync.lastError ? <p className="form-error">{sync.lastError}</p> : null}
-          <button
-            type="button"
-            className="btn btn-secondary"
-            disabled={!token || !sync.online || sync.pendingCount === 0}
-            onClick={() => token && tryFlush(token, user.tenant.id)}
-          >
-            Sync now
-          </button>
         </div>
-
-        <div className="panel form" style={{ marginBottom: "1.25rem" }}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          disabled={!token || !sync.online || sync.pendingCount === 0}
+          onClick={() => token && tryFlush(token, user.tenant.id)}
+        >
+          Sync now
+        </button>
+        <div style={{ flex: "1 1 12rem" }}>
           <p className="panel-label">Shift</p>
           {shift ? (
-            <>
-              <p className="muted">
-                Open · cash in drawer expected later from opening Rs {shift.opening_cash} + cash
-                sales Rs {shift.cash_sales_total}
-              </p>
-              <label>
-                Closing cash count
-                <input value={closingCash} onChange={(e) => setClosingCash(e.target.value)} />
-              </label>
-              <button className="btn btn-secondary" type="button" disabled={pending} onClick={closeShift}>
-                Close shift
-              </button>
-            </>
+            <p className="muted" style={{ margin: 0 }}>
+              Open · opening Rs {shift.opening_cash} · cash sales Rs {shift.cash_sales_total}
+            </p>
           ) : (
-            <>
-              <label>
-                Opening cash
-                <input value={openingCash} onChange={(e) => setOpeningCash(e.target.value)} />
-              </label>
-              <button className="btn" type="button" disabled={pending || !sync.online} onClick={openShift}>
-                Open shift
-              </button>
-              {!sync.online ? (
-                <p className="muted">Open a shift while online before selling offline.</p>
-              ) : null}
-            </>
+            <p className="muted" style={{ margin: 0 }}>
+              No open shift{!sync.online ? " — open one while online first" : ""}
+            </p>
           )}
         </div>
+        {shift ? (
+          <div className="home-actions" style={{ marginTop: 0 }}>
+            <input
+              className="qty-input"
+              style={{ width: "7rem" }}
+              value={closingCash}
+              onChange={(e) => setClosingCash(e.target.value)}
+              aria-label="Closing cash"
+              placeholder="Close cash"
+            />
+            <button className="btn btn-secondary" type="button" disabled={pending} onClick={closeShift}>
+              Close shift
+            </button>
+          </div>
+        ) : (
+          <div className="home-actions" style={{ marginTop: 0 }}>
+            <input
+              className="qty-input"
+              style={{ width: "7rem" }}
+              value={openingCash}
+              onChange={(e) => setOpeningCash(e.target.value)}
+              aria-label="Opening cash"
+              placeholder="Open cash"
+            />
+            <button className="btn" type="button" disabled={pending || !sync.online} onClick={openShift}>
+              Open shift
+            </button>
+          </div>
+        )}
+      </div>
 
-        <div className="pos-grid">
-          <div className="stack">
-            <label className="panel form">
-              Search name, SKU, or barcode
-              <input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                onKeyDown={onSearchKeyDown}
-                placeholder="Type to filter, or scan + Enter"
-                autoComplete="off"
-              />
+      <div className="pos-grid">
+        <div className="stack">
+          <label className="panel form">
+            Search name, SKU, or barcode
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              onKeyDown={onSearchKeyDown}
+              placeholder="Type to filter, or scan + Enter"
+              autoComplete="off"
+            />
+          </label>
+          <div className="panel">
+            <p className="panel-label">Products</p>
+            {filtered.length ? (
+              <ul className="product-grid">
+                {filtered.map((product) => (
+                  <li key={product.id}>
+                    <button
+                      type="button"
+                      className="product-tile"
+                      onClick={() => addProduct(product)}
+                      disabled={!shift && sync.online}
+                    >
+                      <span>{product.name}</span>
+                      <span className="muted">Rs {product.unit_price}</span>
+                      <span className="muted">Stock {product.stock_on_hand}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">
+                No matching products.{" "}
+                <Link href="/dashboard/products">Add products</Link>
+              </p>
+            )}
+          </div>
+          <div className="panel">
+            <p className="panel-label">Parked bills</p>
+            {parked.length ? (
+              <ul className="row-list">
+                {parked.map((bill) => (
+                  <li key={bill.id}>
+                    <button type="button" className="btn btn-secondary" onClick={() => resumeParked(bill)}>
+                      Resume {bill.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">None held</p>
+            )}
+          </div>
+        </div>
+
+        <div className="pos-cart-sticky stack">
+          <div className="panel">
+            <p className="panel-label">Cart</p>
+            {cart.length ? (
+              <ul className="row-list">
+                {cart.map((line) => (
+                  <li key={line.product.id}>
+                    <span>
+                      {line.product.name}
+                      <span className="muted"> · Rs {line.product.unit_price}</span>
+                    </span>
+                    <input
+                      className="qty-input"
+                      type="number"
+                      min={1}
+                      value={line.quantity}
+                      onChange={(event) =>
+                        setQuantity(line.product.id, Number(event.target.value) || 0)
+                      }
+                    />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted">Cart is empty — scan a barcode or tap a product</p>
+            )}
+          </div>
+
+          <div className="panel form">
+            <p className="panel-label">Pay</p>
+            <p>
+              Subtotal <strong>Rs {money(subtotal)}</strong>
+            </p>
+            <label>
+              Discount
+              <input value={discount} onChange={(event) => setDiscount(event.target.value)} />
             </label>
-            <div className="panel">
-              <p className="panel-label">Products</p>
-              {filtered.length ? (
-                <ul className="product-grid">
-                  {filtered.map((product) => (
-                    <li key={product.id}>
-                      <button
-                        type="button"
-                        className="product-tile"
-                        onClick={() => addProduct(product)}
-                        disabled={!shift && sync.online}
-                      >
-                        <span>{product.name}</span>
-                        <span className="muted">Rs {product.unit_price}</span>
-                        <span className="muted">Stock {product.stock_on_hand}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="muted">No matching products.</p>
-              )}
-            </div>
-            <div className="panel">
-              <p className="panel-label">Parked bills</p>
-              {parked.length ? (
-                <ul className="row-list">
-                  {parked.map((bill) => (
-                    <li key={bill.id}>
-                      <button type="button" className="btn btn-secondary" onClick={() => resumeParked(bill)}>
-                        Resume {bill.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="muted">None held</p>
-              )}
+            {payments.map((row, index) => (
+              <div key={index} className="pay-row">
+                <select
+                  value={row.method}
+                  onChange={(event) => {
+                    const next = [...payments];
+                    next[index] = {
+                      ...row,
+                      method: event.target.value as PayRow["method"],
+                    };
+                    setPayments(next);
+                  }}
+                >
+                  <option value="cash">Cash</option>
+                  <option value="card">Card</option>
+                  <option value="credit">Credit</option>
+                </select>
+                <input
+                  value={row.amount}
+                  onChange={(event) => {
+                    const next = [...payments];
+                    next[index] = { ...row, amount: event.target.value };
+                    setPayments(next);
+                  }}
+                  placeholder="Amount"
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => setPayments((rows) => [...rows, { method: "card", amount: "" }])}
+            >
+              Add payment split
+            </button>
+            <p>
+              Total <strong>Rs {money(total)}</strong>
+              <span className="muted"> · paid Rs {money(paid)}</span>
+            </p>
+            <label>
+              Hold label
+              <input value={parkLabel} onChange={(e) => setParkLabel(e.target.value)} />
+            </label>
+            {error ? <p className="form-error">{error}</p> : null}
+            <div className="home-actions">
+              <button
+                className="btn"
+                type="button"
+                disabled={pending || !cart.length || (!shift && sync.online)}
+                onClick={checkout}
+              >
+                {pending ? "Charging…" : "Complete sale"}
+              </button>
+              <button
+                className="btn btn-secondary"
+                type="button"
+                disabled={pending || !cart.length || !shift || !sync.online}
+                onClick={parkBill}
+              >
+                Park bill
+              </button>
             </div>
           </div>
 
-          <div className="stack">
+          {lastSale ? (
             <div className="panel">
-              <p className="panel-label">Cart</p>
-              {cart.length ? (
-                <ul className="row-list">
-                  {cart.map((line) => (
-                    <li key={line.product.id}>
-                      <span>
-                        {line.product.name}
-                        <span className="muted"> · Rs {line.product.unit_price}</span>
-                      </span>
-                      <input
-                        className="qty-input"
-                        type="number"
-                        min={1}
-                        value={line.quantity}
-                        onChange={(event) =>
-                          setQuantity(line.product.id, Number(event.target.value) || 0)
-                        }
-                      />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="muted">Cart is empty</p>
-              )}
-            </div>
-
-            <div className="panel form">
-              <p className="panel-label">Pay</p>
+              <p className="panel-label">Last receipt</p>
               <p>
-                Subtotal <strong>Rs {money(subtotal)}</strong>
+                {lastSale.receipt_number} · Rs {lastSale.total}
               </p>
-              <label>
-                Discount
-                <input value={discount} onChange={(event) => setDiscount(event.target.value)} />
-              </label>
-              {payments.map((row, index) => (
-                <div key={index} className="pay-row">
-                  <select
-                    value={row.method}
-                    onChange={(event) => {
-                      const next = [...payments];
-                      next[index] = {
-                        ...row,
-                        method: event.target.value as PayRow["method"],
-                      };
-                      setPayments(next);
-                    }}
-                  >
-                    <option value="cash">Cash</option>
-                    <option value="card">Card</option>
-                    <option value="credit">Credit</option>
-                  </select>
-                  <input
-                    value={row.amount}
-                    onChange={(event) => {
-                      const next = [...payments];
-                      next[index] = { ...row, amount: event.target.value };
-                      setPayments(next);
-                    }}
-                    placeholder="Amount"
-                  />
-                </div>
-              ))}
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => setPayments((rows) => [...rows, { method: "card", amount: "" }])}
+                onClick={() =>
+                  printReceipt(lastSale, receiptBusinessFromUser(user), {
+                    cashierName: user.full_name,
+                  })
+                }
               >
-                Add payment split
+                Print receipt
               </button>
-              <p>
-                Total <strong>Rs {money(total)}</strong>
-                <span className="muted"> · paid Rs {money(paid)}</span>
-              </p>
-              <label>
-                Hold label
-                <input value={parkLabel} onChange={(e) => setParkLabel(e.target.value)} />
-              </label>
-              {error ? <p className="form-error">{error}</p> : null}
-              <div className="home-actions">
-                <button
-                  className="btn"
-                  type="button"
-                  disabled={pending || !cart.length || (!shift && sync.online)}
-                  onClick={checkout}
-                >
-                  {pending ? "Charging…" : "Complete sale"}
-                </button>
-                <button
-                  className="btn btn-secondary"
-                  type="button"
-                  disabled={pending || !cart.length || !shift || !sync.online}
-                  onClick={parkBill}
-                >
-                  Park bill
-                </button>
-              </div>
             </div>
-
-            {lastSale ? (
-              <div className="panel">
-                <p className="panel-label">Last receipt</p>
-                <p>
-                  {lastSale.receipt_number} · Rs {lastSale.total}
-                </p>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  onClick={() =>
-                    printReceipt(lastSale, receiptBusinessFromUser(user), {
-                      cashierName: user.full_name,
-                    })
-                  }
-                >
-                  Print receipt
-                </button>
-              </div>
-            ) : null}
-          </div>
+          ) : null}
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }

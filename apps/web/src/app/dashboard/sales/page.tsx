@@ -7,10 +7,7 @@ import { useRouter } from "next/navigation";
 import { ApiError, apiFetch, type Sale, type User } from "@/lib/api";
 import { getStoredUser, getToken } from "@/lib/auth";
 import { printReceipt, receiptBusinessFromUser } from "@/lib/printReceipt";
-
-function canUsePos(role: string): boolean {
-  return role === "owner" || role === "manager" || role === "cashier";
-}
+import { canAccessPos, canAccessSales } from "@/lib/roles";
 
 function canVoid(role: string): boolean {
   return role === "owner" || role === "manager";
@@ -36,7 +33,7 @@ export default function SalesPage() {
       router.replace("/login");
       return;
     }
-    if (!canUsePos(stored.role)) {
+    if (!canAccessSales(stored.role)) {
       router.replace("/dashboard");
       return;
     }
@@ -84,23 +81,21 @@ export default function SalesPage() {
   );
 
   if (!user) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   return (
-    <div className="page">
-      <main className="shell shell-wide">
+    <main className="shell shell-wide">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Sales</h1>
         <p className="lede">
-          Recent receipts for this business.{" "}
-          <Link href="/dashboard/pos">Back to POS</Link>
+          Recent receipts for this business.
+          {canAccessPos(user.role) ? (
+            <>
+              {" "}
+              <Link href="/dashboard/pos">Back to POS</Link>
+            </>
+          ) : null}
         </p>
 
         {error ? <p className="form-error">{error}</p> : null}
@@ -166,12 +161,16 @@ export default function SalesPage() {
             </ul>
           ) : (
             <p className="muted">
-              No sales yet.{" "}
-              <Link href="/dashboard/pos">Open POS</Link> to make the first sale.
+              No sales yet.
+              {canAccessPos(user.role) ? (
+                <>
+                  {" "}
+                  <Link href="/dashboard/pos">Open POS</Link> to make the first sale.
+                </>
+              ) : null}
             </p>
           )}
         </div>
       </main>
-    </div>
   );
 }

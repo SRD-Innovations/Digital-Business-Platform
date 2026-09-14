@@ -105,18 +105,11 @@ export default function TeamPage() {
   }
 
   if (!user) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   return (
-    <div className="page">
-      <main className="shell shell-wide">
+    <main className="shell shell-wide">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Team</h1>
         <p className="lede">
@@ -210,6 +203,5 @@ export default function TeamPage() {
           </form>
         </div>
       </main>
-    </div>
   );
 }

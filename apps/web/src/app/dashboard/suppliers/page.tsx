@@ -69,18 +69,11 @@ export default function SuppliersPage() {
   }
 
   if (!user) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   return (
-    <div className="page">
-      <main className="shell">
+    <main className="shell">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Suppliers</h1>
         <p className="lede">
@@ -134,6 +127,5 @@ export default function SuppliersPage() {
           )}
         </div>
       </main>
-    </div>
   );
 }

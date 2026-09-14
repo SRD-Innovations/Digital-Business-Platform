@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { homePathForUser } from "@/lib/roles";
+import { AuthShell } from "@/components/AuthShell";
 import { SocialButtons } from "@/components/SocialButtons";
 
 export default function LoginPage() {
@@ -27,7 +29,7 @@ export default function LoginPage() {
         }),
       });
       saveSession(auth);
-      router.push("/dashboard");
+      router.push(homePathForUser(auth.user));
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not sign in");
     } finally {
@@ -36,31 +38,42 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="page">
-      <main className="shell form-shell">
-        <p className="eyebrow">Welcome back</p>
-        <h1>Sign in</h1>
-        <p className="lede">Email, phone, or a social account you already use.</p>
-        <form className="panel form" onSubmit={onSubmit}>
-          <label>
-            Email or mobile number
-            <input name="identifier" required placeholder="owner@business.lk or 0771234567" />
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" required minLength={8} />
-          </label>
-          {error ? <p className="form-error">{error}</p> : null}
-          <button type="submit" className="btn" disabled={pending}>
-            {pending ? "Signing in…" : "Sign in"}
-          </button>
-        </form>
-        <div className="or-rule">or</div>
-        <SocialButtons intent="login" />
-        <p className="form-foot">
-          New business? <Link href="/register">Create an account</Link>
-        </p>
-      </main>
-    </div>
+    <AuthShell>
+      <p className="eyebrow">Welcome back</p>
+      <h1>Sign in</h1>
+      <form className="panel form" onSubmit={onSubmit}>
+        <label>
+          Email or mobile number
+          <input
+            name="identifier"
+            required
+            autoComplete="username"
+            placeholder="owner@business.lk or 0771234567"
+          />
+        </label>
+        <label>
+          Password
+          <input
+            name="password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="current-password"
+          />
+        </label>
+        {error ? <p className="form-error">{error}</p> : null}
+        <button type="submit" className="btn" disabled={pending}>
+          {pending ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
+      <div className="or-rule">or</div>
+      <SocialButtons intent="login" />
+      <p className="form-foot">
+        New business?{" "}
+        <Link href="/" className="link-underline">
+          Create business
+        </Link>
+      </p>
+    </AuthShell>
   );
 }

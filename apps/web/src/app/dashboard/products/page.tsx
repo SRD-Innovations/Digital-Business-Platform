@@ -13,6 +13,7 @@ import {
   type User,
 } from "@/lib/api";
 import { getStoredUser, getToken } from "@/lib/auth";
+import { canAccessPos } from "@/lib/roles";
 
 function canEditCatalog(role: string): boolean {
   return role === "owner" || role === "manager" || role === "stock_keeper";
@@ -145,26 +146,26 @@ export default function ProductsPage() {
   }
 
   if (!user) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   const selected = products.find((product) => product.id === selectedId) ?? null;
 
   return (
-    <div className="page">
-      <main className="shell shell-wide">
+    <main className="shell shell-wide">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Products</h1>
         <p className="lede">
-          Catalog with wholesale tiers and optional batch/expiry tracking.{" "}
-          <Link href="/dashboard/pos">Open POS</Link>
-          {" · "}
+          Catalog with wholesale tiers and optional batch/expiry tracking.
+          {canAccessPos(user.role) ? (
+            <>
+              {" "}
+              <Link href="/dashboard/pos">Open POS</Link>
+              {" · "}
+            </>
+          ) : (
+            " "
+          )}
           <Link href="/dashboard/purchases">Purchases</Link>
         </p>
         <div className="stack">
@@ -286,6 +287,5 @@ export default function ProductsPage() {
           {error && !canEditCatalog(user.role) ? <p className="form-error">{error}</p> : null}
         </div>
       </main>
-    </div>
   );
 }

@@ -1,34 +1,12 @@
-import Link from "next/link";
+"use client";
 
-import { ApiStatus } from "@/components/ApiStatus";
+import { RegisterForm } from "@/components/RegisterForm";
+import { AuthShell } from "@/components/AuthShell";
 
 export default function HomePage() {
   return (
-    <div className="page">
-      <main className="shell">
-        <p className="eyebrow">SRD Innovations</p>
-        <h1>Digital Business Platform</h1>
-        <p className="lede">
-          A web-based operating system for a business — EPOS and ERP together —
-          not a till with extras bolted on.
-        </p>
-        <div className="panel">
-          <ul>
-            <li>MVP: core, POS, ERP, Trade, Manufacturing, Solo</li>
-            <li>Web only, offline-first</li>
-            <li>Next.js · FastAPI · Supabase · Bun · Vercel · Render</li>
-          </ul>
-        </div>
-        <div className="home-actions">
-          <Link className="btn" href="/register">
-            Create business
-          </Link>
-          <Link className="btn btn-secondary" href="/login">
-            Sign in
-          </Link>
-        </div>
-        <ApiStatus />
-      </main>
-    </div>
+    <AuthShell panelId="signup">
+      <RegisterForm idPrefix="home-" />
+    </AuthShell>
   );
 }

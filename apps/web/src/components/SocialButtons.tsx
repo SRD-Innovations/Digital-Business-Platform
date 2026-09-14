@@ -1,16 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { API_URL } from "@/lib/api";
+import { IconFacebook, IconGoogle, IconTikTok } from "@/components/Icons";
 
-import { API_URL, apiFetch } from "@/lib/api";
+const PROVIDERS = [
+  { id: "google" as const, label: "Google", Icon: IconGoogle },
+  { id: "facebook" as const, label: "Facebook", Icon: IconFacebook },
+  { id: "tiktok" as const, label: "TikTok", Icon: IconTikTok },
+];
 
-const LABELS = {
-  google: "Continue with Google",
-  facebook: "Continue with Facebook",
-  tiktok: "Continue with TikTok",
-} as const;
-
-type Provider = keyof typeof LABELS;
+type Provider = (typeof PROVIDERS)[number]["id"];
 
 type Props = {
   intent: "login" | "register" | "join";
@@ -19,14 +18,6 @@ type Props = {
 };
 
 export function SocialButtons({ intent, inviteToken, getBusinessName }: Props) {
-  const [configured, setConfigured] = useState(false);
-
-  useEffect(() => {
-    apiFetch<Record<Provider, boolean>>("/v1/auth/oauth/providers")
-      .then((providers) => setConfigured(Object.values(providers).some(Boolean)))
-      .catch(() => undefined);
-  }, []);
-
   function start(provider: Provider) {
     const params = new URLSearchParams({ intent });
     if (inviteToken) params.set("invite_token", inviteToken);
@@ -43,16 +34,20 @@ export function SocialButtons({ intent, inviteToken, getBusinessName }: Props) {
 
   return (
     <div className="social-stack">
-      {(Object.keys(LABELS) as Provider[]).map((provider) => (
-        <button key={provider} type="button" className="btn btn-secondary" onClick={() => start(provider)}>
-          {LABELS[provider]}
-        </button>
-      ))}
-      {!configured ? (
-        <p className="muted">
-          These buttons work after Google, Facebook, and TikTok app keys are added on the API.
-        </p>
-      ) : null}
+      <div className="social-row">
+        {PROVIDERS.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            type="button"
+            className="btn btn-secondary social-btn social-btn-icon"
+            onClick={() => start(id)}
+            aria-label={`Continue with ${label}`}
+            title={label}
+          >
+            <Icon />
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

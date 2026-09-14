@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     api_env: str = "development"
     api_cors_origins: str = (
         "http://localhost:3000,"
+        "https://biznet.srdinnovations.tech,"
         "https://srd-biz.vercel.app,"
         "https://srd-innovations.github.io"
     )
