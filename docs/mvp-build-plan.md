@@ -35,4 +35,4 @@ Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feat
 
 ## Next concrete slice
 
-`feature/pos-online` delivered online POS: catalog, shifts, checkout with split payments, park/hold, void/return, browser print receipt. Next: `feature/offline-sync`.
+`feature/offline-sync` first cut: IndexedDB catalog cache, checkout op queue with idempotent `client_op_id`, last-synced UI on POS, and a production app-shell service worker. Conflict rules remain last-write / retry with a `sync_conflicts` table stub. Next after this branch: `feature/erp-core`.

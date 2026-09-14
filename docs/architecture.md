@@ -67,10 +67,10 @@ Owner/Admin · Manager · Cashier · Stock Keeper · Accountant · Production St
 | Hospitality | No | Table/room booking — Phase 2 |
 | Services | No | Appointment/job billing — Phase 2/3 |
 
-## Offline (phase 4, not this branch)
+## Offline (phase 4)
 
-Local store: IndexedDB via Dexie.js or PGlite. Sync: device operation log (timestamp + device/user id) posted to FastAPI. Last-write-wins or field-level resolve with a log for ambiguous cases. Schema should allow a later move to PowerSync / ElectricSQL without a rewrite.
+Local store: IndexedDB (hand-rolled stores for catalog + pending checkout ops; Dexie/PGlite remain options). Sync: device operation log (`client_op_id` + `device_id`) posted to FastAPI checkout; retries are idempotent. Last-write-wins for now; ambiguous cases can land in `sync_conflicts`. Production registers a thin app-shell service worker. Schema should allow a later move to PowerSync / ElectricSQL without a rewrite.
 
 ## What this branch is not
 
-Custom per-module permissions, password reset, email delivery of invites, social OAuth app keys, offline sync, real thermal WebUSB printers, loyalty, and SMS receipts.
+Custom per-module permissions, password reset, email delivery of invites, social OAuth app keys, field-level conflict UI, offline void/return/park/shift open, real thermal WebUSB printers, loyalty, and SMS receipts.

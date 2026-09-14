@@ -86,6 +86,8 @@ export type Sale = {
   cashier_user_id: string;
   shift_id: string | null;
   refund_of_sale_id: string | null;
+  client_op_id: string | null;
+  device_id: string | null;
   subtotal: string;
   discount_total: string;
   total: string;

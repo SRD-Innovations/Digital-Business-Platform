@@ -86,6 +86,8 @@ class CheckoutRequest(BaseModel):
     lines: list[CheckoutLine] = Field(min_length=1)
     payments: list[CheckoutPayment] = Field(min_length=1)
     parked_bill_id: str | None = None
+    client_op_id: str | None = Field(default=None, min_length=8, max_length=64)
+    device_id: str | None = Field(default=None, min_length=4, max_length=64)
 
     @model_validator(mode="after")
     def require_lines(self) -> "CheckoutRequest":
@@ -123,6 +125,8 @@ class SaleOut(BaseModel):
     cashier_user_id: str
     shift_id: str | None = None
     refund_of_sale_id: str | None = None
+    client_op_id: str | None = None
+    device_id: str | None = None
     subtotal: Decimal
     discount_total: Decimal
     total: Decimal

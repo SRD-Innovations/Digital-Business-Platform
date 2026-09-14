@@ -14,6 +14,14 @@ import {
   type User,
 } from "@/lib/api";
 import { getStoredUser, getToken } from "@/lib/auth";
+import { readCachedProducts } from "@/lib/offline/db";
+import {
+  checkoutOnlineOrQueue,
+  flushPendingCheckouts,
+  loadProductsForPos,
+  readSyncStatus,
+  type SyncStatus,
+} from "@/lib/offline/sync";
 
 type CartLine = { product: Product; quantity: number };
 type PayRow = { method: "cash" | "card" | "credit"; amount: string };
@@ -24,6 +32,15 @@ function canUsePos(role: string): boolean {
 
 function money(value: number): string {
   return value.toFixed(2);
+}
+
+function formatSynced(iso: string | null): string {
+  if (!iso) return "never";
+  try {
+    return new Date(iso).toLocaleString();
+  } catch {
+    return iso;
+  }
 }
 
 function printReceipt(sale: Sale, business: string) {
@@ -75,16 +92,45 @@ export default function PosPage() {
   const [pending, setPending] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
   const [activeParkedId, setActiveParkedId] = useState<string | null>(null);
+  const [fromCache, setFromCache] = useState(false);
+  const [sync, setSync] = useState<SyncStatus>({
+    online: true,
+    pendingCount: 0,
+    lastSyncedAt: null,
+    flushing: false,
+    lastError: null,
+  });
 
-  async function refresh(tokenValue: string) {
-    const [nextProducts, nextShift, nextParked] = await Promise.all([
-      apiFetch<Product[]>("/v1/products", { token: tokenValue }),
-      apiFetch<Shift | null>("/v1/pos/shifts/current", { token: tokenValue }),
-      apiFetch<ParkedBill[]>("/v1/pos/parked", { token: tokenValue }),
-    ]);
-    setProducts(nextProducts);
-    setShift(nextShift);
-    setParked(nextParked);
+  async function refreshSync(tenantId: string) {
+    setSync(await readSyncStatus(tenantId));
+  }
+
+  async function refresh(tokenValue: string, tenantId: string) {
+    const catalog = await loadProductsForPos(tokenValue, tenantId);
+    setProducts(catalog.products);
+    setFromCache(catalog.fromCache);
+    try {
+      const [nextShift, nextParked] = await Promise.all([
+        apiFetch<Shift | null>("/v1/pos/shifts/current", { token: tokenValue }),
+        apiFetch<ParkedBill[]>("/v1/pos/parked", { token: tokenValue }),
+      ]);
+      setShift(nextShift);
+      setParked(nextParked);
+    } catch {
+      // Catalog may still load from cache while shift/park need network.
+    }
+    await refreshSync(tenantId);
+  }
+
+  async function tryFlush(tokenValue: string, tenantId: string) {
+    const result = await flushPendingCheckouts(tokenValue, tenantId);
+    await refreshSync(tenantId);
+    if (result.error) {
+      setError(`Sync paused: ${result.error}`);
+    } else if (result.synced > 0) {
+      setError("");
+      await refresh(tokenValue, tenantId);
+    }
   }
 
   useEffect(() => {
@@ -100,9 +146,23 @@ export default function PosPage() {
     }
     setUser(stored);
     setToken(storedToken);
-    refresh(storedToken).catch((err) =>
+    refresh(storedToken, stored.tenant.id).catch((err) =>
       setError(err instanceof ApiError ? err.message : "Could not load POS"),
     );
+
+    const onOnline = () => {
+      tryFlush(storedToken, stored.tenant.id).catch(() => undefined);
+      refreshSync(stored.tenant.id).catch(() => undefined);
+    };
+    const onOffline = () => {
+      refreshSync(stored.tenant.id).catch(() => undefined);
+    };
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
   }, [router]);
 
   const filtered = useMemo(() => {
@@ -172,6 +232,10 @@ export default function PosPage() {
 
   async function closeShift() {
     if (!token || !shift) return;
+    if (sync.pendingCount > 0) {
+      setError("Sync pending sales before closing the shift");
+      return;
+    }
     setError("");
     setPending(true);
     try {
@@ -189,7 +253,7 @@ export default function PosPage() {
   }
 
   async function parkBill() {
-    if (!token || !cart.length) return;
+    if (!token || !user || !cart.length) return;
     setError("");
     setPending(true);
     try {
@@ -214,7 +278,7 @@ export default function PosPage() {
       setCart([]);
       setDiscount("0");
       setActiveParkedId(null);
-      await refresh(token);
+      await refresh(token, user.tenant.id);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not park bill");
     } finally {
@@ -237,32 +301,43 @@ export default function PosPage() {
   }
 
   async function checkout() {
-    if (!token || !cart.length) return;
+    if (!token || !user || !cart.length) return;
     setError("");
     setPending(true);
     try {
       const payRows = payments
         .map((row) => ({ method: row.method, amount: money(Number(row.amount) || 0) }))
         .filter((row) => Number(row.amount) > 0);
-      const sale = await apiFetch<Sale>("/v1/pos/checkout", {
-        method: "POST",
+      const result = await checkoutOnlineOrQueue({
         token,
-        body: JSON.stringify({
-          discount_total: money(discountValue),
-          parked_bill_id: activeParkedId,
-          lines: cart.map((line) => ({
-            product_id: line.product.id,
-            quantity: String(line.quantity),
-          })),
-          payments: payRows,
-        }),
+        tenantId: user.tenant.id,
+        discountTotal: money(discountValue),
+        parkedBillId: activeParkedId,
+        lines: cart.map((line) => ({
+          product_id: line.product.id,
+          quantity: String(line.quantity),
+        })),
+        payments: payRows,
       });
-      setLastSale(sale);
+      if (result.sale) {
+        setLastSale(result.sale);
+        setError("");
+      } else if (result.queued) {
+        setLastSale(null);
+        setError("Sale saved on this device — will sync when online");
+      }
       setCart([]);
       setDiscount("0");
       setPayments([{ method: "cash", amount: "" }]);
       setActiveParkedId(null);
-      await refresh(token);
+      if (result.queued) {
+        const cached = await readCachedProducts(user.tenant.id);
+        setProducts(cached.map(({ tenant_id: _t, ...product }) => product));
+        setFromCache(true);
+        await refreshSync(user.tenant.id);
+      } else {
+        await refresh(token, user.tenant.id);
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Checkout failed");
     } finally {
@@ -292,6 +367,27 @@ export default function PosPage() {
           <Link href="/dashboard/sales">Sales</Link>
         </p>
 
+        <div className="panel sync-status" style={{ marginBottom: "1.25rem" }}>
+          <p className="panel-label">Sync</p>
+          <p className="muted">
+            {sync.online ? "Online" : "Offline"}
+            {" · "}
+            pending {sync.pendingCount}
+            {" · "}
+            last synced {formatSynced(sync.lastSyncedAt)}
+            {fromCache ? " · catalog from this device" : ""}
+          </p>
+          {sync.lastError ? <p className="form-error">{sync.lastError}</p> : null}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={!token || !sync.online || sync.pendingCount === 0}
+            onClick={() => token && tryFlush(token, user.tenant.id)}
+          >
+            Sync now
+          </button>
+        </div>
+
         <div className="panel form" style={{ marginBottom: "1.25rem" }}>
           <p className="panel-label">Shift</p>
           {shift ? (
@@ -314,9 +410,12 @@ export default function PosPage() {
                 Opening cash
                 <input value={openingCash} onChange={(e) => setOpeningCash(e.target.value)} />
               </label>
-              <button className="btn" type="button" disabled={pending} onClick={openShift}>
+              <button className="btn" type="button" disabled={pending || !sync.online} onClick={openShift}>
                 Open shift
               </button>
+              {!sync.online ? (
+                <p className="muted">Open a shift while online before selling offline.</p>
+              ) : null}
             </>
           )}
         </div>
@@ -341,7 +440,7 @@ export default function PosPage() {
                         type="button"
                         className="product-tile"
                         onClick={() => addProduct(product)}
-                        disabled={!shift}
+                        disabled={!shift && sync.online}
                       >
                         <span>{product.name}</span>
                         <span className="muted">Rs {product.unit_price}</span>
@@ -457,7 +556,7 @@ export default function PosPage() {
                 <button
                   className="btn"
                   type="button"
-                  disabled={pending || !cart.length || !shift}
+                  disabled={pending || !cart.length || (!shift && sync.online)}
                   onClick={checkout}
                 >
                   {pending ? "Charging…" : "Complete sale"}
@@ -465,7 +564,7 @@ export default function PosPage() {
                 <button
                   className="btn btn-secondary"
                   type="button"
-                  disabled={pending || !cart.length || !shift}
+                  disabled={pending || !cart.length || !shift || !sync.online}
                   onClick={parkBill}
                 >
                   Park bill

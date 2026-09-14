@@ -346,6 +346,15 @@ def checkout(
     user: User = Depends(require_roles(*POS_ROLES)),
     db: Session = Depends(get_db),
 ) -> Sale:
+    if body.client_op_id:
+        existing = db.scalar(
+            select(Sale)
+            .options(joinedload(Sale.lines), joinedload(Sale.payments))
+            .where(Sale.tenant_id == user.tenant_id, Sale.client_op_id == body.client_op_id)
+        )
+        if existing is not None:
+            return existing
+
     branch_id = body.branch_id or user.branch_id
     branch = _branch_for_tenant(db, user.tenant_id, branch_id)
     shift = _open_shift(db, user, branch.id if branch else None)
@@ -415,6 +424,8 @@ def checkout(
         branch_id=branch.id if branch else None,
         cashier_user_id=user.id,
         shift_id=shift.id,
+        client_op_id=body.client_op_id,
+        device_id=body.device_id,
         receipt_number=_receipt_number(),
         status="completed",
         subtotal=subtotal.quantize(Decimal("0.01")),
