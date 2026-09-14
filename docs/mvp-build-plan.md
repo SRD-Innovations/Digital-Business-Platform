@@ -35,4 +35,4 @@ Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feat
 
 ## Next concrete slice
 
-`feature/erp-core` first cut: suppliers, purchase receive into stock, inventory movement log (including POS sale/void/return), stock adjustments, and a sales report. Ledgers, bank recon, branch transfers, and full VAT/P&L wait for a follow-up. Next after this branch: `feature/module-trade`.
+`feature/module-trade` first cut: wholesale quantity price tiers, supplier unit costs, and optional batch/expiry lots with FEFO checkout. Prescription logging and high-SKU tooling wait for a follow-up. Next after this branch: `feature/module-manufacturing`.

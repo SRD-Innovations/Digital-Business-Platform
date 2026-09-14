@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -65,6 +65,8 @@ class ReceiveLine(BaseModel):
     product_id: str
     quantity: Decimal = Field(gt=0, max_digits=12, decimal_places=3)
     unit_cost: Decimal = Field(default=Decimal("0"), ge=0, max_digits=12, decimal_places=2)
+    batch_code: str | None = Field(default=None, max_length=64)
+    expiry_date: date | None = None
 
 
 class PurchaseReceiveRequest(BaseModel):
@@ -85,6 +87,8 @@ class PurchaseReceiptLineOut(BaseModel):
     product_id: str
     quantity: Decimal
     unit_cost: Decimal
+    batch_code: str | None = None
+    expiry_date: date | None = None
 
     model_config = {"from_attributes": True}
 

@@ -63,6 +63,9 @@ class SaleLine(Base):
     quantity: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False)
     unit_price: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
     line_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    batch_id: Mapped[str | None] = mapped_column(
+        GUID(), ForeignKey("product_batches.id", ondelete="SET NULL"), nullable=True
+    )
 
     sale: Mapped["Sale"] = relationship(back_populates="lines")
 

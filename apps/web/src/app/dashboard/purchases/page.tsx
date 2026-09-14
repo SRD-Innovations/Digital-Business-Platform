@@ -33,6 +33,8 @@ export default function PurchasesPage() {
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [unitCost, setUnitCost] = useState("0");
+  const [batchCode, setBatchCode] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -78,10 +80,20 @@ export default function PurchasesPage() {
         token,
         body: JSON.stringify({
           supplier_id: supplierId,
-          lines: [{ product_id: productId, quantity, unit_cost: unitCost || "0" }],
+          lines: [
+            {
+              product_id: productId,
+              quantity,
+              unit_cost: unitCost || "0",
+              batch_code: batchCode || null,
+              expiry_date: expiryDate || null,
+            },
+          ],
         }),
       });
       setQuantity("1");
+      setBatchCode("");
+      setExpiryDate("");
       await load(token);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Receive failed");
@@ -144,6 +156,14 @@ export default function PurchasesPage() {
             <label>
               Unit cost
               <input value={unitCost} onChange={(e) => setUnitCost(e.target.value)} />
+            </label>
+            <label>
+              Batch code (required if product tracks batches)
+              <input value={batchCode} onChange={(e) => setBatchCode(e.target.value)} />
+            </label>
+            <label>
+              Expiry date
+              <input type="date" value={expiryDate} onChange={(e) => setExpiryDate(e.target.value)} />
             </label>
             {error ? <p className="form-error">{error}</p> : null}
             <button className="btn" type="submit" disabled={pending || !suppliers.length || !products.length}>
