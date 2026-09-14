@@ -332,7 +332,12 @@ export default function PosPage() {
       setActiveParkedId(null);
       if (result.queued) {
         const cached = await readCachedProducts(user.tenant.id);
-        setProducts(cached.map(({ tenant_id: _t, ...product }) => product));
+        setProducts(
+          cached.map(({ tenant_id: _t, ...product }) => ({
+            ...product,
+            track_batches: product.track_batches ?? false,
+          })),
+        );
         setFromCache(true);
         await refreshSync(user.tenant.id);
       } else {
