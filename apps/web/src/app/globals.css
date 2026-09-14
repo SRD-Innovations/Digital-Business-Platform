@@ -462,16 +462,21 @@ h2 {
 
 .landing-page {
   min-height: calc(100vh - var(--header-h));
+  height: calc(100vh - var(--header-h));
+  max-height: calc(100vh - var(--header-h));
+  overflow: hidden;
 }
 
 .landing-page.page {
   animation: none;
+  min-height: calc(100vh - var(--header-h));
 }
 
 .landing-split {
   display: grid;
-  min-height: calc(100vh - var(--header-h));
-  grid-template-rows: minmax(16rem, 42vh) auto;
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: minmax(14rem, 38vh) minmax(0, 1fr);
 }
 
 @media (min-width: 900px) {
@@ -483,14 +488,40 @@ h2 {
 
 .landing-visual {
   position: relative;
-  min-height: 16rem;
+  min-height: 0;
+  height: 100%;
   overflow: hidden;
   isolation: isolate;
 }
 
 @media (min-width: 900px) {
   .landing-visual {
-    min-height: calc(100vh - var(--header-h));
+    position: sticky;
+    top: 0;
+    height: calc(100vh - var(--header-h));
+    align-self: start;
+  }
+}
+
+.landing-signup {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 1.5rem 1.15rem 2.5rem;
+  background:
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(15, 110, 99, 0.08), transparent 50%),
+    rgba(250, 248, 244, 0.65);
+}
+
+@media (min-width: 900px) {
+  .landing-signup {
+    align-items: flex-start;
+    padding: 2rem 1.5rem 3rem;
   }
 }
 
@@ -852,23 +883,6 @@ h2 {
   height: 3.5rem;
 }
 
-.landing-signup {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 1.5rem 1.15rem 2.5rem;
-  background:
-    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(15, 110, 99, 0.08), transparent 50%),
-    rgba(250, 248, 244, 0.65);
-}
-
-@media (min-width: 900px) {
-  .landing-signup {
-    align-items: center;
-    padding: 2rem 1.5rem 3rem;
-  }
-}
-
 .landing-signup-inner {
   width: 100%;
   max-width: 26rem;
@@ -938,29 +952,6 @@ h2 {
 
 .slide-art-btn:hover .art-card {
   transform: translateY(-4px) scale(1.02);
-}
-
-.art-tap {
-  position: absolute;
-  right: 0.35rem;
-  bottom: 0.15rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-  animation: tap-hint 1.6s ease-in-out infinite;
-}
-
-@keyframes tap-hint {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-2px);
-  }
 }
 
 .landing-orb {
@@ -1469,6 +1460,22 @@ h2 {
 
   .landing-visual {
     min-height: 14.5rem;
+  }
+
+  .landing-page {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .landing-split {
+    height: auto;
+    grid-template-rows: minmax(14rem, 36vh) auto;
+  }
+
+  .landing-signup {
+    height: auto;
+    overflow: visible;
   }
 
   .slide-art {

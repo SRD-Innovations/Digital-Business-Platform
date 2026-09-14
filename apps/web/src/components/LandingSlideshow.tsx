@@ -46,7 +46,6 @@ function SlideVisual({
           <span />
           <span />
         </div>
-        <span className="art-tap">Tap</span>
       </button>
     );
   }
@@ -72,7 +71,6 @@ function SlideVisual({
             </svg>
           </div>
         </div>
-        <span className="art-tap">Tap</span>
       </button>
     );
   }
@@ -88,7 +86,6 @@ function SlideVisual({
           </div>
           <p className="art-caption">Queue · Sync</p>
         </div>
-        <span className="art-tap">Tap</span>
       </button>
     );
   }
@@ -106,7 +103,6 @@ function SlideVisual({
           <i style={{ "--h": "40%" } as CSSProperties} />
         </div>
       </div>
-      <span className="art-tap">Tap</span>
     </button>
   );
 }
