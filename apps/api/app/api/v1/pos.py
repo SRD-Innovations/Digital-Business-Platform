@@ -29,6 +29,8 @@ from app.schemas.pos import (
     ShiftOut,
 )
 from app.services.inventory import apply_stock_change
+from app.services.pricing import allocate_batches_fefo, resolve_unit_price
+from app.models.trade import ProductBatch
 
 POS_ROLES = ("owner", "manager", "cashier")
 CATALOG_ROLES = ("owner", "manager", "stock_keeper")
@@ -151,10 +153,22 @@ def create_product(
         barcode=barcode,
         unit_price=body.unit_price,
         stock_on_hand=Decimal("0"),
+        track_batches=body.track_batches,
     )
     db.add(product)
     db.flush()
     if body.stock_on_hand > 0:
+        if body.track_batches:
+            from app.services.pricing import add_to_batch
+
+            add_to_batch(
+                db,
+                product=product,
+                batch_code="OPENING",
+                quantity=body.stock_on_hand,
+                expiry_date=None,
+                tenant_id=user.tenant_id,
+            )
         apply_stock_change(
             db,
             product=product,
@@ -408,19 +422,39 @@ def checkout(
 
     sale_lines: list[SaleLine] = []
     subtotal = Decimal("0")
+    stock_plan: list[tuple[Product, Decimal, str | None]] = []
     for line in body.lines:
         product = by_id[line.product_id]
-        line_total = (product.unit_price * line.quantity).quantize(Decimal("0.01"))
-        subtotal += line_total
-        sale_lines.append(
-            SaleLine(
-                product_id=product.id,
-                product_name=product.name,
-                quantity=line.quantity,
-                unit_price=product.unit_price,
-                line_total=line_total,
+        unit_price = resolve_unit_price(db, product, line.quantity)
+        if product.track_batches:
+            allocations = allocate_batches_fefo(db, product=product, quantity=line.quantity)
+            for batch, qty in allocations:
+                line_total = (unit_price * qty).quantize(Decimal("0.01"))
+                subtotal += line_total
+                sale_lines.append(
+                    SaleLine(
+                        product_id=product.id,
+                        product_name=product.name,
+                        quantity=qty,
+                        unit_price=unit_price,
+                        line_total=line_total,
+                        batch_id=batch.id,
+                    )
+                )
+                stock_plan.append((product, qty, batch.id))
+        else:
+            line_total = (unit_price * line.quantity).quantize(Decimal("0.01"))
+            subtotal += line_total
+            sale_lines.append(
+                SaleLine(
+                    product_id=product.id,
+                    product_name=product.name,
+                    quantity=line.quantity,
+                    unit_price=unit_price,
+                    line_total=line_total,
+                )
             )
-        )
+            stock_plan.append((product, line.quantity, None))
 
     discount = body.discount_total
     if discount > subtotal:
@@ -459,11 +493,11 @@ def checkout(
     )
     db.add(sale)
     db.flush()
-    for line in body.lines:
+    for product, qty, _batch_id in stock_plan:
         apply_stock_change(
             db,
-            product=by_id[line.product_id],
-            quantity_delta=-line.quantity,
+            product=product,
+            quantity_delta=-qty,
             reason="sale",
             user_id=user.id,
             ref_type="sale",
@@ -500,6 +534,14 @@ def void_sale(
                 select(Product).where(Product.id == line.product_id, Product.tenant_id == user.tenant_id)
             )
             if product:
+                if line.batch_id:
+                    batch = db.scalar(
+                        select(ProductBatch).where(
+                            ProductBatch.id == line.batch_id, ProductBatch.tenant_id == user.tenant_id
+                        )
+                    )
+                    if batch:
+                        batch.quantity = (batch.quantity + line.quantity).quantize(Decimal("0.001"))
                 apply_stock_change(
                     db,
                     product=product,
@@ -580,6 +622,14 @@ def return_sale(
                 select(Product).where(Product.id == source.product_id, Product.tenant_id == user.tenant_id)
             )
             if product:
+                if source.batch_id:
+                    batch = db.scalar(
+                        select(ProductBatch).where(
+                            ProductBatch.id == source.batch_id, ProductBatch.tenant_id == user.tenant_id
+                        )
+                    )
+                    if batch:
+                        batch.quantity = (batch.quantity + selection.quantity).quantize(Decimal("0.001"))
                 apply_stock_change(
                     db,
                     product=product,

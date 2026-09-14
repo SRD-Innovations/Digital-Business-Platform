@@ -11,6 +11,7 @@ class ProductCreate(BaseModel):
     barcode: str | None = Field(default=None, max_length=64)
     unit_price: Decimal = Field(ge=0, max_digits=12, decimal_places=2)
     stock_on_hand: Decimal = Field(default=Decimal("0"), ge=0, max_digits=12, decimal_places=3)
+    track_batches: bool = False
 
     @field_validator("sku", "barcode", mode="before")
     @classmethod
@@ -33,6 +34,7 @@ class ProductUpdate(BaseModel):
     barcode: str | None = Field(default=None, max_length=64)
     unit_price: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2)
     stock_on_hand: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=3)
+    track_batches: bool | None = None
     is_active: bool | None = None
 
     @field_validator("sku", "barcode", mode="before")
@@ -57,6 +59,7 @@ class ProductOut(BaseModel):
     barcode: str | None = None
     unit_price: Decimal
     stock_on_hand: Decimal
+    track_batches: bool = False
     is_active: bool
 
     model_config = {"from_attributes": True}
@@ -105,6 +108,7 @@ class SaleLineOut(BaseModel):
     quantity: Decimal
     unit_price: Decimal
     line_total: Decimal
+    batch_id: str | None = None
 
     model_config = {"from_attributes": True}
 

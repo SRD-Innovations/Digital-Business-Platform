@@ -1,9 +1,9 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text, func
+from sqlalchemy import Date, DateTime, ForeignKey, Numeric, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base
@@ -53,6 +53,8 @@ class PurchaseReceiptLine(Base):
     product_id: Mapped[str] = mapped_column(GUID(), ForeignKey("products.id", ondelete="RESTRICT"))
     quantity: Mapped[Decimal] = mapped_column(Numeric(12, 3), nullable=False)
     unit_cost: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False, default=Decimal("0"))
+    batch_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    expiry_date: Mapped[date | None] = mapped_column(Date, nullable=True)
 
     receipt: Mapped["PurchaseReceipt"] = relationship(back_populates="lines")
     product: Mapped["Product"] = relationship()

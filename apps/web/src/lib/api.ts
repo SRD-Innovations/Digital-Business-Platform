@@ -60,7 +60,30 @@ export type Product = {
   barcode: string | null;
   unit_price: string;
   stock_on_hand: string;
+  track_batches: boolean;
   is_active: boolean;
+};
+
+export type PriceTier = {
+  id: string;
+  product_id: string;
+  min_qty: string;
+  unit_price: string;
+};
+
+export type ProductBatch = {
+  id: string;
+  product_id: string;
+  batch_code: string;
+  expiry_date: string | null;
+  quantity: string;
+};
+
+export type SupplierPrice = {
+  id: string;
+  supplier_id: string;
+  product_id: string;
+  unit_cost: string;
 };
 
 export type SaleLine = {

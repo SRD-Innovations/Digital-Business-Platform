@@ -11,6 +11,7 @@ from app.models.shift import Shift
 from app.models.supplier import Supplier
 from app.models.sync_conflict import SyncConflict
 from app.models.tenant import Tenant
+from app.models.trade import PriceTier, ProductBatch, SupplierPrice
 from app.models.user import User
 
 __all__ = [
@@ -20,7 +21,9 @@ __all__ = [
     "InventoryMovement",
     "OAuthAccount",
     "ParkedBill",
+    "PriceTier",
     "Product",
+    "ProductBatch",
     "PurchaseReceipt",
     "PurchaseReceiptLine",
     "Sale",
@@ -28,6 +31,7 @@ __all__ = [
     "SalePayment",
     "Shift",
     "Supplier",
+    "SupplierPrice",
     "SyncConflict",
     "Tenant",
     "User",

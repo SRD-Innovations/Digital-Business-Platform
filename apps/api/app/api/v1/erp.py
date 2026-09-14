@@ -28,6 +28,7 @@ from app.schemas.erp import (
     SupplierUpdate,
 )
 from app.services.inventory import apply_stock_change
+from app.services.pricing import add_to_batch
 
 INVENTORY_ROLES = ("owner", "manager", "stock_keeper")
 REPORT_ROLES = ("owner", "manager", "accountant")
@@ -179,6 +180,8 @@ def receive_purchase(
                 product_id=line.product_id,
                 quantity=line.quantity,
                 unit_cost=line.unit_cost,
+                batch_code=_blank(line.batch_code),
+                expiry_date=line.expiry_date,
             )
             for line in body.lines
         ],
@@ -187,9 +190,25 @@ def receive_purchase(
     db.flush()
 
     for line in body.lines:
+        product = by_id[line.product_id]
+        if product.track_batches:
+            code = _blank(line.batch_code)
+            if not code:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Batch code required for {product.name}",
+                )
+            add_to_batch(
+                db,
+                product=product,
+                batch_code=code,
+                quantity=line.quantity,
+                expiry_date=line.expiry_date,
+                tenant_id=user.tenant_id,
+            )
         apply_stock_change(
             db,
-            product=by_id[line.product_id],
+            product=product,
             quantity_delta=line.quantity,
             reason="purchase_receive",
             user_id=user.id,

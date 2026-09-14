@@ -344,6 +344,12 @@ h1 {
   font-size: 0.9rem;
 }
 
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .form-foot {
   margin: 1rem 0 0;
   color: var(--muted);
