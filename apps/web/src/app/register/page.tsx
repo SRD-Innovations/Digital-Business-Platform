@@ -39,46 +39,81 @@ export default function RegisterPage() {
 
   return (
     <div className="page">
-      <main className="shell form-shell">
-        <p className="eyebrow">Get started</p>
-        <h1>Create your business</h1>
-        <p className="lede">
-          Owners can use email and a password, or continue with Google, Facebook, or TikTok.
-          Staff can join later with a mobile number — they do not need email.
-        </p>
-        <form className="panel form" onSubmit={onSubmit} id="register-form">
-          <label>
-            Business name
-            <input id="business_name" name="business_name" required minLength={2} placeholder="Nuwara Rice Mill" />
-          </label>
-          <label>
-            Your name
-            <input name="full_name" required minLength={2} placeholder="Amal Perera" />
-          </label>
-          <label>
-            Email
-            <input name="email" type="email" required placeholder="owner@business.lk" />
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" required minLength={8} />
-          </label>
-          {error ? <p className="form-error">{error}</p> : null}
-          <button type="submit" className="btn" disabled={pending}>
-            {pending ? "Creating…" : "Create business"}
-          </button>
-        </form>
-        <div className="or-rule">or</div>
-        <SocialButtons
-          intent="register"
-          getBusinessName={() =>
-            (document.getElementById("business_name") as HTMLInputElement | null)?.value ?? ""
-          }
-        />
-        <p className="form-foot">
-          Already have an account? <Link href="/login">Sign in</Link>
-        </p>
-      </main>
+      <div className="auth-split">
+        <aside className="auth-brand">
+          <div className="auth-brand-inner">
+            <p className="brand-mark">SRD Biz</p>
+            <p>
+              Open a trial in minutes. Invite staff by phone later — they do not need email to join
+              the till.
+            </p>
+          </div>
+        </aside>
+        <div className="auth-panel">
+          <main className="shell form-shell">
+            <p className="eyebrow">Get started</p>
+            <h1>Create your business</h1>
+            <p className="lede">Owners start with email. Cashiers can join with a mobile invite.</p>
+            <form className="panel form" onSubmit={onSubmit} id="register-form">
+              <label>
+                Business name
+                <input
+                  id="business_name"
+                  name="business_name"
+                  required
+                  minLength={2}
+                  placeholder="Nuwara Rice Mill"
+                  autoComplete="organization"
+                />
+              </label>
+              <label>
+                Your name
+                <input
+                  name="full_name"
+                  required
+                  minLength={2}
+                  placeholder="Amal Perera"
+                  autoComplete="name"
+                />
+              </label>
+              <label>
+                Email
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="owner@business.lk"
+                  autoComplete="email"
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                />
+              </label>
+              {error ? <p className="form-error">{error}</p> : null}
+              <button type="submit" className="btn" disabled={pending}>
+                {pending ? "Creating…" : "Create business"}
+              </button>
+            </form>
+            <div className="or-rule">or</div>
+            <SocialButtons
+              intent="register"
+              getBusinessName={() =>
+                (document.getElementById("business_name") as HTMLInputElement | null)?.value ?? ""
+              }
+            />
+            <p className="form-foot">
+              Already have an account? <Link href="/login">Sign in</Link>
+            </p>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

@@ -145,20 +145,13 @@ export default function ProductsPage() {
   }
 
   if (!user) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   const selected = products.find((product) => product.id === selectedId) ?? null;
 
   return (
-    <div className="page">
-      <main className="shell shell-wide">
+    <main className="shell shell-wide">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Products</h1>
         <p className="lede">
@@ -286,6 +279,5 @@ export default function ProductsPage() {
           {error && !canEditCatalog(user.role) ? <p className="form-error">{error}</p> : null}
         </div>
       </main>
-    </div>
   );
 }

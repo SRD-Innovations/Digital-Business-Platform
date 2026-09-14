@@ -8,9 +8,14 @@ import type { User } from "@/lib/api";
 
 export function SiteHeader() {
   const [user, setUser] = useState<User | null>(null);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     setUser(getStoredUser());
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   function signOut() {
@@ -20,20 +25,17 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="topbar">
-      <Link href="/" className="brand">
-        SRD Biz
+    <header className="topbar" data-scrolled={scrolled ? "true" : "false"}>
+      <Link href={user ? "/dashboard" : "/"} className="brand">
+        SRD <span>Biz</span>
       </Link>
       <nav className="nav">
         {user ? (
           <>
-            <Link href="/dashboard">Dashboard</Link>
-            {user.role === "owner" || user.role === "manager" ? (
-              <>
-                <Link href="/dashboard/team">Team</Link>
-                <Link href="/dashboard/branches">Branches</Link>
-              </>
-            ) : null}
+            <span className="user-chip" title={user.tenant.name}>
+              {user.full_name}
+            </span>
+            <Link href="/dashboard">Home</Link>
             <button type="button" className="link-button" onClick={signOut}>
               Sign out
             </button>

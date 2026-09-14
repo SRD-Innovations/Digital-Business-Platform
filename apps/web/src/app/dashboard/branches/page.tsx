@@ -55,18 +55,11 @@ export default function BranchesPage() {
   }
 
   if (!user) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   return (
-    <div className="page">
-      <main className="shell">
+    <main className="shell">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Branches</h1>
         <p className="lede">Stock and staff will be scoped to a branch. Main was created at signup.</p>
@@ -94,6 +87,5 @@ export default function BranchesPage() {
           </form>
         </div>
       </main>
-    </div>
   );
 }

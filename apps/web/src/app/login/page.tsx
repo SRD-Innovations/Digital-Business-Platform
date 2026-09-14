@@ -37,30 +37,51 @@ export default function LoginPage() {
 
   return (
     <div className="page">
-      <main className="shell form-shell">
-        <p className="eyebrow">Welcome back</p>
-        <h1>Sign in</h1>
-        <p className="lede">Email, phone, or a social account you already use.</p>
-        <form className="panel form" onSubmit={onSubmit}>
-          <label>
-            Email or mobile number
-            <input name="identifier" required placeholder="owner@business.lk or 0771234567" />
-          </label>
-          <label>
-            Password
-            <input name="password" type="password" required minLength={8} />
-          </label>
-          {error ? <p className="form-error">{error}</p> : null}
-          <button type="submit" className="btn" disabled={pending}>
-            {pending ? "Signing in…" : "Sign in"}
-          </button>
-        </form>
-        <div className="or-rule">or</div>
-        <SocialButtons intent="login" />
-        <p className="form-foot">
-          New business? <Link href="/register">Create an account</Link>
-        </p>
-      </main>
+      <div className="auth-split">
+        <aside className="auth-brand">
+          <div className="auth-brand-inner">
+            <p className="brand-mark">SRD Biz</p>
+            <p>Your counter, stock room, and production floor — one sign-in.</p>
+          </div>
+        </aside>
+        <div className="auth-panel">
+          <main className="shell form-shell">
+            <p className="eyebrow">Welcome back</p>
+            <h1>Sign in</h1>
+            <p className="lede">Use email, mobile number, or a linked social account.</p>
+            <form className="panel form" onSubmit={onSubmit}>
+              <label>
+                Email or mobile number
+                <input
+                  name="identifier"
+                  required
+                  autoComplete="username"
+                  placeholder="owner@business.lk or 0771234567"
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete="current-password"
+                />
+              </label>
+              {error ? <p className="form-error">{error}</p> : null}
+              <button type="submit" className="btn" disabled={pending}>
+                {pending ? "Signing in…" : "Sign in"}
+              </button>
+            </form>
+            <div className="or-rule">or</div>
+            <SocialButtons intent="login" />
+            <p className="form-foot">
+              New business? <Link href="/register">Create an account</Link>
+            </p>
+          </main>
+        </div>
+      </div>
     </div>
   );
 }

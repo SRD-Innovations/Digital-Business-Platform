@@ -95,18 +95,11 @@ export default function SettingsPage() {
   }
 
   if (!user || !form) {
-    return (
-      <div className="page">
-        <main className="shell">
-          <p className="lede">Loading…</p>
-        </main>
-      </div>
-    );
+    return <p className="lede">Loading…</p>;
   }
 
   return (
-    <div className="page">
-      <main className="shell">
+    <main className="shell">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Business settings</h1>
         <p className="lede">
@@ -114,7 +107,7 @@ export default function SettingsPage() {
           <Link href="/dashboard">Dashboard</Link>
         </p>
 
-        {error ? <p className="error">{error}</p> : null}
+        {error ? <p className="form-error">{error}</p> : null}
         {message ? <p className="muted">{message}</p> : null}
 
         <form className="panel form" onSubmit={onSubmit}>
@@ -192,6 +185,5 @@ export default function SettingsPage() {
           </button>
         </form>
       </main>
-    </div>
   );
 }

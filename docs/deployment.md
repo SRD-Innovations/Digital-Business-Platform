@@ -2,7 +2,7 @@
 
 | Surface | Host | URL |
 | --- | --- | --- |
-| `apps/web` | Vercel | https://srd-biz.vercel.app |
+| `apps/web` | Vercel | https://biznet.srdinnovations.tech (also https://srd-biz.vercel.app) |
 | `apps/api` | Render | https://digital-business-platform.onrender.com |
 | Database | Supabase | `fqbxexfiqihtmdfultth` (Mumbai / South Asia when available) |
 | CI | GitHub Actions | `.github/workflows/ci.yml` |
@@ -11,7 +11,7 @@ Never commit database passwords or service-role keys. Put them only in Vercel / 
 
 ## Vercel (web)
 
-Live: [srd-biz.vercel.app](https://srd-biz.vercel.app)
+Live: [biznet.srdinnovations.tech](https://biznet.srdinnovations.tech) · [srd-biz.vercel.app](https://srd-biz.vercel.app)
 
 Root directory `apps/web`. Install `bun install`. Build `bun run build`.
 
@@ -24,6 +24,8 @@ Set these **Production** environment variables, then Redeploy:
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | the `sb_publishable_…` key from Supabase (Settings → API) |
 
 `NEXT_*` values are baked in at **build** time. Changing them requires a new Vercel deploy.
+
+When you add a **custom domain** on Vercel, also update Render `API_CORS_ORIGINS` and `WEB_ORIGIN` (below) to include that exact origin (`https://…`), then restart/redeploy the API. Otherwise the browser blocks login with “Cannot reach the API”.
 
 ## Render (API)
 
@@ -43,11 +45,11 @@ Environment variables:
 | --- | --- |
 | `PYTHON_VERSION` | `3.12.8` |
 | `API_ENV` | `production` |
-| `API_CORS_ORIGINS` | `https://srd-biz.vercel.app,http://localhost:3000` |
+| `API_CORS_ORIGINS` | `https://biznet.srdinnovations.tech,https://srd-biz.vercel.app,http://localhost:3000` |
 | `SUPABASE_URL` | `https://fqbxexfiqihtmdfultth.supabase.co` |
 | `DATABASE_URL` | Postgres URI from Supabase. **URL-encode** `#` and `@` in the password (`#` → `%23`, `@` → `%40`) |
 | `JWT_SECRET` | long random string (Render will not share the default) |
-| `WEB_ORIGIN` | `https://srd-biz.vercel.app` (OAuth returns here) |
+| `WEB_ORIGIN` | `https://biznet.srdinnovations.tech` (OAuth returns here; primary web URL) |
 | `OAUTH_REDIRECT_BASE` | `https://digital-business-platform.onrender.com` |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Cloud OAuth client |
 | `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | Meta app |
