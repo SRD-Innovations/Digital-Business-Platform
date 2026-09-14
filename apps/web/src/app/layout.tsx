@@ -22,6 +22,10 @@ export const metadata: Metadata = {
   title: "BizNet",
   description:
     "BizNet — offline-first EPOS and ERP for Sri Lankan shops, trade, and manufacturing. Working name; not locked yet.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
