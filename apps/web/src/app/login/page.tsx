@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { AuthShell } from "@/components/AuthShell";
 import { SocialButtons } from "@/components/SocialButtons";
 
 export default function LoginPage() {
@@ -36,51 +37,39 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="page">
-      <div className="auth-split">
-        <aside className="auth-brand">
-          <div className="auth-brand-inner">
-            <p className="brand-mark">BizNet</p>
-            <p>Your counter, stock room, and production floor — one sign-in.</p>
-          </div>
-        </aside>
-        <div className="auth-panel">
-          <main className="shell form-shell">
-        <p className="eyebrow">Welcome back</p>
-        <h1>Sign in</h1>
-        <form className="panel form" onSubmit={onSubmit}>
-              <label>
-                Email or mobile number
-                <input
-                  name="identifier"
-                  required
-                  autoComplete="username"
-                  placeholder="owner@business.lk or 0771234567"
-                />
-              </label>
-              <label>
-                Password
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="current-password"
-                />
-              </label>
-              {error ? <p className="form-error">{error}</p> : null}
-              <button type="submit" className="btn" disabled={pending}>
-                {pending ? "Signing in…" : "Sign in"}
-              </button>
-            </form>
-            <div className="or-rule">or</div>
-            <SocialButtons intent="login" />
-            <p className="form-foot">
-              New business? <Link href="/register">Create an account</Link>
-            </p>
-          </main>
-        </div>
-      </div>
-    </div>
+    <AuthShell>
+      <p className="eyebrow">Welcome back</p>
+      <h1>Sign in</h1>
+      <form className="panel form" onSubmit={onSubmit}>
+        <label>
+          Email or mobile number
+          <input
+            name="identifier"
+            required
+            autoComplete="username"
+            placeholder="owner@business.lk or 0771234567"
+          />
+        </label>
+        <label>
+          Password
+          <input
+            name="password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="current-password"
+          />
+        </label>
+        {error ? <p className="form-error">{error}</p> : null}
+        <button type="submit" className="btn" disabled={pending}>
+          {pending ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
+      <div className="or-rule">or</div>
+      <SocialButtons intent="login" />
+      <p className="form-foot">
+        New business? <Link href="/">Create an account</Link>
+      </p>
+    </AuthShell>
   );
 }

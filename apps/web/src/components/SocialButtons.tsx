@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { API_URL, apiFetch } from "@/lib/api";
+import { API_URL } from "@/lib/api";
 import { IconFacebook, IconGoogle, IconTikTok } from "@/components/Icons";
 
 const PROVIDERS = [
@@ -20,14 +18,6 @@ type Props = {
 };
 
 export function SocialButtons({ intent, inviteToken, getBusinessName }: Props) {
-  const [configured, setConfigured] = useState(false);
-
-  useEffect(() => {
-    apiFetch<Record<Provider, boolean>>("/v1/auth/oauth/providers")
-      .then((providers) => setConfigured(Object.values(providers).some(Boolean)))
-      .catch(() => undefined);
-  }, []);
-
   function start(provider: Provider) {
     const params = new URLSearchParams({ intent });
     if (inviteToken) params.set("invite_token", inviteToken);
@@ -49,16 +39,15 @@ export function SocialButtons({ intent, inviteToken, getBusinessName }: Props) {
           <button
             key={id}
             type="button"
-            className="btn btn-secondary social-btn"
+            className="btn btn-secondary social-btn social-btn-icon"
             onClick={() => start(id)}
             aria-label={`Continue with ${label}`}
+            title={label}
           >
             <Icon />
-            <span className="social-btn-label">{label}</span>
           </button>
         ))}
       </div>
-      {!configured ? <p className="muted social-hint">Connect social apps in API settings to enable.</p> : null}
     </div>
   );
 }

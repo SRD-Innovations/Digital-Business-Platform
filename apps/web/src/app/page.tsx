@@ -1,21 +1,12 @@
 "use client";
 
 import { RegisterForm } from "@/components/RegisterForm";
-import { LandingSlideshow } from "@/components/LandingSlideshow";
+import { AuthShell } from "@/components/AuthShell";
 
 export default function HomePage() {
   return (
-    <div className="page landing-page">
-      <section className="landing-split" aria-label="BizNet">
-        <div className="landing-visual">
-          <LandingSlideshow />
-        </div>
-        <div className="landing-signup" id="signup">
-          <main className="shell form-shell landing-signup-inner">
-            <RegisterForm compact idPrefix="home-" />
-          </main>
-        </div>
-      </section>
-    </div>
+    <AuthShell panelId="signup">
+      <RegisterForm compact idPrefix="home-" />
+    </AuthShell>
   );
 }

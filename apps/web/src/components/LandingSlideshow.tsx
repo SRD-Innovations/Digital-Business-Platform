@@ -25,10 +25,16 @@ const SLIDES = [
   },
 ] as const;
 
-function SlideVisual({ kind }: { kind: (typeof SLIDES)[number]["visual"] }) {
+function SlideVisual({
+  kind,
+  onInteract,
+}: {
+  kind: (typeof SLIDES)[number]["visual"];
+  onInteract: () => void;
+}) {
   if (kind === "pos") {
     return (
-      <div className="slide-art" aria-hidden>
+      <button type="button" className="slide-art slide-art-btn" onClick={onInteract} aria-label="Next highlight">
         <div className="art-card art-receipt">
           <span className="art-line art-line-wide" />
           <span className="art-line" />
@@ -40,12 +46,13 @@ function SlideVisual({ kind }: { kind: (typeof SLIDES)[number]["visual"] }) {
           <span />
           <span />
         </div>
-      </div>
+        <span className="art-tap">Tap</span>
+      </button>
     );
   }
   if (kind === "stock") {
     return (
-      <div className="slide-art" aria-hidden>
+      <button type="button" className="slide-art slide-art-btn" onClick={onInteract} aria-label="Next highlight">
         <div className="art-card art-chart">
           <div className="art-bars">
             <i style={{ "--h": "42%" } as CSSProperties} />
@@ -56,16 +63,22 @@ function SlideVisual({ kind }: { kind: (typeof SLIDES)[number]["visual"] }) {
           </div>
           <div className="art-spark">
             <svg viewBox="0 0 120 36" preserveAspectRatio="none">
-              <path d="M0 28 C20 26 28 8 48 12 C68 16 78 30 100 6 L120 6" fill="none" stroke="currentColor" strokeWidth="2.5" />
+              <path
+                d="M0 28 C20 26 28 8 48 12 C68 16 78 30 100 6 L120 6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              />
             </svg>
           </div>
         </div>
-      </div>
+        <span className="art-tap">Tap</span>
+      </button>
     );
   }
   if (kind === "sync") {
     return (
-      <div className="slide-art" aria-hidden>
+      <button type="button" className="slide-art slide-art-btn" onClick={onInteract} aria-label="Next highlight">
         <div className="art-card art-sync">
           <div className="art-pulse" />
           <div className="art-queue">
@@ -75,11 +88,12 @@ function SlideVisual({ kind }: { kind: (typeof SLIDES)[number]["visual"] }) {
           </div>
           <p className="art-caption">Queue · Sync</p>
         </div>
-      </div>
+        <span className="art-tap">Tap</span>
+      </button>
     );
   }
   return (
-    <div className="slide-art" aria-hidden>
+    <button type="button" className="slide-art slide-art-btn" onClick={onInteract} aria-label="Next highlight">
       <div className="art-card art-bom">
         <div className="art-nodes">
           <span className="art-node" />
@@ -92,25 +106,36 @@ function SlideVisual({ kind }: { kind: (typeof SLIDES)[number]["visual"] }) {
           <i style={{ "--h": "40%" } as CSSProperties} />
         </div>
       </div>
-    </div>
+      <span className="art-tap">Tap</span>
+    </button>
   );
 }
 
 export function LandingSlideshow() {
   const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
+    if (paused) return;
     const id = window.setInterval(() => {
       setIndex((current) => (current + 1) % SLIDES.length);
     }, 4800);
     return () => window.clearInterval(id);
-  }, []);
+  }, [paused]);
+
+  function next() {
+    setIndex((current) => (current + 1) % SLIDES.length);
+    setPaused(true);
+    window.setTimeout(() => setPaused(false), 8000);
+  }
 
   const slide = SLIDES[index];
 
   return (
     <div className="landing-stage" data-tone={slide.tone}>
       <div className="landing-stage-glow" aria-hidden />
+      <div className="landing-orb landing-orb-a" aria-hidden />
+      <div className="landing-orb landing-orb-b" aria-hidden />
       <div className="landing-stage-inner">
         <div className="landing-stage-top">
           <p className="landing-brand">BizNet</p>
@@ -118,7 +143,7 @@ export function LandingSlideshow() {
         </div>
 
         <div className="landing-stage-mid" key={slide.title}>
-          <SlideVisual kind={slide.visual} />
+          <SlideVisual kind={slide.visual} onInteract={next} />
           <h2 className="landing-slide-title">{slide.title}</h2>
         </div>
 
@@ -130,7 +155,11 @@ export function LandingSlideshow() {
               className="landing-dot"
               data-active={i === index ? "true" : "false"}
               aria-label={item.title}
-              onClick={() => setIndex(i)}
+              onClick={() => {
+                setIndex(i);
+                setPaused(true);
+                window.setTimeout(() => setPaused(false), 8000);
+              }}
             />
           ))}
         </div>
