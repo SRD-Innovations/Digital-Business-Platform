@@ -2,6 +2,7 @@ from app.models.base import Base
 from app.models.branch import Branch
 from app.models.invite import Invite
 from app.models.inventory_movement import InventoryMovement
+from app.models.manufacturing import Bom, BomLine, ProductionRun, ProductionRunLine
 from app.models.oauth_account import OAuthAccount
 from app.models.parked_bill import ParkedBill
 from app.models.product import Product
@@ -16,6 +17,8 @@ from app.models.user import User
 
 __all__ = [
     "Base",
+    "Bom",
+    "BomLine",
     "Branch",
     "Invite",
     "InventoryMovement",
@@ -24,6 +27,8 @@ __all__ = [
     "PriceTier",
     "Product",
     "ProductBatch",
+    "ProductionRun",
+    "ProductionRunLine",
     "PurchaseReceipt",
     "PurchaseReceiptLine",
     "Sale",

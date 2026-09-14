@@ -206,6 +206,46 @@ export type SalesReport = {
   by_payment: { method: string; amount: string }[];
 };
 
+export type BomLine = {
+  id: string;
+  component_product_id: string;
+  quantity_per_output: string;
+};
+
+export type Bom = {
+  id: string;
+  name: string;
+  finished_product_id: string;
+  expected_yield_pct: string;
+  is_active: boolean;
+  lines: BomLine[];
+};
+
+export type ProductionRunLine = {
+  id: string;
+  component_product_id: string;
+  quantity: string;
+  unit_cost: string;
+  line_cost: string;
+};
+
+export type ProductionRun = {
+  id: string;
+  bom_id: string;
+  finished_product_id: string;
+  planned_output_qty: string;
+  actual_output_qty: string;
+  yield_pct: string;
+  wastage_pct: string;
+  unit_cost: string;
+  total_component_cost: string;
+  status: string;
+  note: string | null;
+  created_by_user_id: string;
+  created_at: string;
+  lines: ProductionRunLine[];
+};
+
 export const STAFF_ROLES = [
   "manager",
   "cashier",

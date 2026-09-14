@@ -35,4 +35,4 @@ Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feat
 
 ## Next concrete slice
 
-`feature/module-trade` first cut: wholesale quantity price tiers, supplier unit costs, and optional batch/expiry lots with FEFO checkout. Prescription logging and high-SKU tooling wait for a follow-up. Next after this branch: `feature/module-manufacturing`.
+`feature/module-manufacturing` first cut: BOM, production runs (consume components / produce finished goods), yield & wastage %, and simple batch unit cost from component list prices. Next after this branch: `feature/billing`.
