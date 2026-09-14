@@ -68,7 +68,10 @@ export default function LoginPage() {
       <div className="or-rule">or</div>
       <SocialButtons intent="login" />
       <p className="form-foot">
-        New business? <Link href="/">Create an account</Link>
+        New business?{" "}
+        <Link href="/" className="link-underline">
+          Create business
+        </Link>
       </p>
     </AuthShell>
   );

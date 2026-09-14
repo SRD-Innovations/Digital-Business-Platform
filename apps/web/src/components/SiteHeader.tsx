@@ -66,8 +66,10 @@ export function SiteHeader() {
           </>
         ) : (
           <>
-            <Link href="/login">Sign in</Link>
-            <Link href="/#signup" className="btn nav-cta">
+            <Link href="/login" className="link-underline">
+              Sign in
+            </Link>
+            <Link href="/#signup" className="link-underline link-underline-accent">
               Create business
             </Link>
           </>

@@ -6,7 +6,7 @@ import { AuthShell } from "@/components/AuthShell";
 export default function HomePage() {
   return (
     <AuthShell panelId="signup">
-      <RegisterForm compact idPrefix="home-" />
+      <RegisterForm idPrefix="home-" />
     </AuthShell>
   );
 }

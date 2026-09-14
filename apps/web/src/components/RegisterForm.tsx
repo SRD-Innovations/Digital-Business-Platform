@@ -9,11 +9,10 @@ import { saveSession } from "@/lib/auth";
 import { SocialButtons } from "@/components/SocialButtons";
 
 type Props = {
-  compact?: boolean;
   idPrefix?: string;
 };
 
-export function RegisterForm({ compact = false, idPrefix = "" }: Props) {
+export function RegisterForm({ idPrefix = "" }: Props) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
@@ -45,17 +44,8 @@ export function RegisterForm({ compact = false, idPrefix = "" }: Props) {
 
   return (
     <>
-      {!compact ? (
-        <>
-          <p className="eyebrow">Get started</p>
-          <h1>Create your business</h1>
-        </>
-      ) : (
-        <>
-          <p className="eyebrow">Free trial</p>
-          <h1>Join BizNet</h1>
-        </>
-      )}
+      <p className="eyebrow">Get started</p>
+      <h1>Create business</h1>
       <form className="panel form" onSubmit={onSubmit} id={`${idPrefix}register-form`}>
         <label>
           Business name
@@ -111,7 +101,10 @@ export function RegisterForm({ compact = false, idPrefix = "" }: Props) {
         }
       />
       <p className="form-foot">
-        Already have an account? <Link href="/login">Sign in</Link>
+        Already have an account?{" "}
+        <Link href="/login" className="link-underline">
+          Sign in
+        </Link>
       </p>
     </>
   );
