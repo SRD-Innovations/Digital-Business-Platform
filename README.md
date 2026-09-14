@@ -44,7 +44,7 @@ The product spec lives in [`mvp.md`](./mvp.md). How we will ship it is in [`docs
 | API hosting | Render |
 | CI | GitHub Actions |
 
-Details: [`docs/stack.md`](./docs/stack.md) · [`docs/architecture.md`](./docs/architecture.md) · [`docs/deployment.md`](./docs/deployment.md)
+Details: [`docs/stack.md`](./docs/stack.md) · [`docs/architecture.md`](./docs/architecture.md) · [`docs/deployment.md`](./docs/deployment.md) · [`docs/api-integration.md`](./docs/api-integration.md)
 
 ## Repository layout
 
