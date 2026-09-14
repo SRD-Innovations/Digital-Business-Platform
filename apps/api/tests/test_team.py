@@ -97,3 +97,56 @@ def test_manager_cannot_invite_manager(client: TestClient) -> None:
         json={"email": "peer@shop.lk", "role": "manager"},
     )
     assert blocked.status_code == 403
+
+
+def test_invite_and_login_with_phone(client: TestClient) -> None:
+    token = _register(client, "owner@phone.lk")
+    invite = client.post(
+        "/v1/invites",
+        headers=_auth_header(token),
+        json={"phone": "0771234567", "role": "cashier"},
+    )
+    assert invite.status_code == 201, invite.text
+    assert invite.json()["invite"]["phone"] == "+94771234567"
+    accepted = client.post(
+        "/v1/invites/accept",
+        json={
+            "token": invite.json()["token"],
+            "full_name": "Saman",
+            "password": "cashierpw",
+        },
+    )
+    assert accepted.status_code == 200, accepted.text
+    assert accepted.json()["user"]["phone"] == "+94771234567"
+    assert accepted.json()["user"]["email"] is None
+    login = client.post(
+        "/v1/auth/login",
+        json={"identifier": "0771234567", "password": "cashierpw"},
+    )
+    assert login.status_code == 200
+    assert login.json()["user"]["role"] == "cashier"
+
+
+def test_invite_requires_phone_or_email(client: TestClient) -> None:
+    token = _register(client, "owner@needcontact.lk")
+    missing = client.post(
+        "/v1/invites",
+        headers=_auth_header(token),
+        json={"role": "cashier"},
+    )
+    assert missing.status_code == 422
+
+
+def test_oauth_providers_endpoint(client: TestClient) -> None:
+    response = client.get("/v1/auth/oauth/providers")
+    assert response.status_code == 200
+    body = response.json()
+    assert body == {"google": False, "facebook": False, "tiktok": False}
+
+
+def test_oauth_start_without_keys_redirects_to_web(client: TestClient) -> None:
+    response = client.get("/v1/auth/oauth/google/start", follow_redirects=False)
+    assert response.status_code in (302, 307)
+    location = response.headers["location"]
+    assert "/auth/oauth/callback" in location
+    assert "error=" in location

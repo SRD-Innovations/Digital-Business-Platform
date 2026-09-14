@@ -65,7 +65,7 @@ export default function DashboardPage() {
           {canManage(user.role) ? (
             <div className="panel">
               <p className="panel-label">Team</p>
-              <p className="muted">Invite cashiers, stock keepers, and other roles with a join link.</p>
+              <p className="muted">Invite cashiers and other roles with a mobile number or join link.</p>
               <p className="form-foot">
                 <Link href="/dashboard/team">Manage team</Link>
               </p>

@@ -19,6 +19,10 @@ function roleLabel(role: string): string {
   return role.replaceAll("_", " ");
 }
 
+function contactLine(person: { email: string | null; phone: string | null }): string {
+  return [person.phone, person.email].filter(Boolean).join(" · ") || "No contact";
+}
+
 export default function TeamPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -72,12 +76,20 @@ export default function TeamPage() {
     const form = event.currentTarget;
     const data = new FormData(form);
     const branchId = String(data.get("branch_id") ?? "");
+    const email = String(data.get("email") ?? "").trim() || null;
+    const phone = String(data.get("phone") ?? "").trim() || null;
+    if (!email && !phone) {
+      setError("Add a mobile number (recommended) or an email.");
+      setPending(false);
+      return;
+    }
     try {
       const created = await apiFetch<InviteCreated>("/v1/invites", {
         method: "POST",
         token,
         body: JSON.stringify({
-          email: data.get("email"),
+          email,
+          phone,
           role: data.get("role"),
           branch_id: branchId || null,
         }),
@@ -108,7 +120,8 @@ export default function TeamPage() {
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Team</h1>
         <p className="lede">
-          Send a join link (WhatsApp or in person). No email server yet — copy the link once it appears.
+          Invite with a Sri Lankan mobile number. Email is optional. Copy the join link or send it on
+          WhatsApp — there is no email server yet.
         </p>
         <div className="stack">
           <div className="panel">
@@ -118,7 +131,7 @@ export default function TeamPage() {
                 <li key={member.id}>
                   <span>
                     {member.full_name}
-                    <span className="muted"> · {member.email}</span>
+                    <span className="muted"> · {contactLine(member)}</span>
                   </span>
                   <span className="muted">
                     {roleLabel(member.role)}
@@ -134,7 +147,7 @@ export default function TeamPage() {
               <ul className="row-list">
                 {invites.map((invite) => (
                   <li key={invite.id}>
-                    <span>{invite.email}</span>
+                    <span>{contactLine(invite)}</span>
                     <span className="muted">{roleLabel(invite.role)}</span>
                   </li>
                 ))}
@@ -146,8 +159,12 @@ export default function TeamPage() {
           <form className="panel form" onSubmit={onSubmit}>
             <p className="panel-label">Invite staff</p>
             <label>
-              Email
-              <input name="email" type="email" required placeholder="cashier@business.lk" />
+              Mobile number
+              <input name="phone" placeholder="0771234567" inputMode="tel" autoComplete="tel" />
+            </label>
+            <label>
+              Email (optional)
+              <input name="email" type="email" placeholder="cashier@business.lk" />
             </label>
             <label>
               Role
@@ -176,6 +193,14 @@ export default function TeamPage() {
                 Join link (copy now):
                 <a className="invite-link" href={joinUrl}>
                   {joinUrl}
+                </a>
+                <a
+                  className="invite-link"
+                  href={`https://wa.me/?text=${encodeURIComponent(`Join our team: ${joinUrl}`)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Send on WhatsApp
                 </a>
               </p>
             ) : null}

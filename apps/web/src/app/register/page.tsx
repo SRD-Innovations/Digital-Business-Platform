@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { SocialButtons } from "@/components/SocialButtons";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -41,11 +42,14 @@ export default function RegisterPage() {
       <main className="shell form-shell">
         <p className="eyebrow">Get started</p>
         <h1>Create your business</h1>
-        <p className="lede">One owner account, one Main branch. You can invite staff later.</p>
-        <form className="panel form" onSubmit={onSubmit}>
+        <p className="lede">
+          Owners can use email and a password, or continue with Google, Facebook, or TikTok.
+          Staff can join later with a mobile number — they do not need email.
+        </p>
+        <form className="panel form" onSubmit={onSubmit} id="register-form">
           <label>
             Business name
-            <input name="business_name" required minLength={2} placeholder="Nuwara Rice Mill" />
+            <input id="business_name" name="business_name" required minLength={2} placeholder="Nuwara Rice Mill" />
           </label>
           <label>
             Your name
@@ -64,6 +68,13 @@ export default function RegisterPage() {
             {pending ? "Creating…" : "Create business"}
           </button>
         </form>
+        <div className="or-rule">or</div>
+        <SocialButtons
+          intent="register"
+          getBusinessName={() =>
+            (document.getElementById("business_name") as HTMLInputElement | null)?.value ?? ""
+          }
+        />
         <p className="form-foot">
           Already have an account? <Link href="/login">Sign in</Link>
         </p>

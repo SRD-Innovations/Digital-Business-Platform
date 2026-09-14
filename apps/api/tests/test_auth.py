@@ -31,7 +31,7 @@ def test_register_login_and_me(client: TestClient) -> None:
 
     login = client.post(
         "/v1/auth/login",
-        json={"email": "owner@mill.lk", "password": "securepass"},
+        json={"identifier": "owner@mill.lk", "password": "securepass"},
     )
     assert login.status_code == 200
     token = login.json()["access_token"]
@@ -57,7 +57,7 @@ def test_login_rejects_bad_password(client: TestClient) -> None:
     )
     response = client.post(
         "/v1/auth/login",
-        json={"email": "kasun@shop.lk", "password": "wrongpass"},
+        json={"identifier": "kasun@shop.lk", "password": "wrongpass"},
     )
     assert response.status_code == 401
 

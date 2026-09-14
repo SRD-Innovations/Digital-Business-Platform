@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { SocialButtons } from "@/components/SocialButtons";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function LoginPage() {
       const auth = await apiFetch<AuthResponse>("/v1/auth/login", {
         method: "POST",
         body: JSON.stringify({
-          email: form.get("email"),
+          identifier: form.get("identifier"),
           password: form.get("password"),
         }),
       });
@@ -39,11 +40,11 @@ export default function LoginPage() {
       <main className="shell form-shell">
         <p className="eyebrow">Welcome back</p>
         <h1>Sign in</h1>
-        <p className="lede">Use the owner email you registered with.</p>
+        <p className="lede">Email, phone, or a social account you already use.</p>
         <form className="panel form" onSubmit={onSubmit}>
           <label>
-            Email
-            <input name="email" type="email" required placeholder="owner@business.lk" />
+            Email or mobile number
+            <input name="identifier" required placeholder="owner@business.lk or 0771234567" />
           </label>
           <label>
             Password
@@ -54,6 +55,8 @@ export default function LoginPage() {
             {pending ? "Signing in…" : "Sign in"}
           </button>
         </form>
+        <div className="or-rule">or</div>
+        <SocialButtons intent="login" />
         <p className="form-foot">
           New business? <Link href="/register">Create an account</Link>
         </p>

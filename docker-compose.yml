@@ -29,6 +29,14 @@ services:
       DATABASE_URL: postgresql://postgres:postgres@db:5432/dbp
       JWT_SECRET: local-dev-jwt-secret-not-for-production-use
       JWT_EXPIRE_MINUTES: "480"
+      WEB_ORIGIN: http://localhost:3000
+      OAUTH_REDIRECT_BASE: http://localhost:8000
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      FACEBOOK_CLIENT_ID: ${FACEBOOK_CLIENT_ID:-}
+      FACEBOOK_CLIENT_SECRET: ${FACEBOOK_CLIENT_SECRET:-}
+      TIKTOK_CLIENT_KEY: ${TIKTOK_CLIENT_KEY:-}
+      TIKTOK_CLIENT_SECRET: ${TIKTOK_CLIENT_SECRET:-}
     ports:
       - "8000:8000"
     volumes:

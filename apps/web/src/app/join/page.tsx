@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { ApiError, apiFetch, type AuthResponse } from "@/lib/api";
 import { saveSession } from "@/lib/auth";
+import { SocialButtons } from "@/components/SocialButtons";
 
 function JoinForm() {
   const router = useRouter();
@@ -41,7 +42,10 @@ function JoinForm() {
       <main className="shell form-shell">
         <p className="eyebrow">Join team</p>
         <h1>Accept invite</h1>
-        <p className="lede">Set your name and password. Your email is already on the invite.</p>
+        <p className="lede">
+          Set a name and password to sign in with your phone later, or join with Google, Facebook, or
+          TikTok if you already use those apps.
+        </p>
         <form className="panel form" onSubmit={onSubmit}>
           <input type="hidden" name="token" value={token} />
           <label>
@@ -57,6 +61,12 @@ function JoinForm() {
             {pending ? "Joining…" : "Join business"}
           </button>
         </form>
+        {token ? (
+          <>
+            <div className="or-rule">or</div>
+            <SocialButtons intent="join" inviteToken={token} />
+          </>
+        ) : null}
       </main>
     </div>
   );

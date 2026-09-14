@@ -34,7 +34,14 @@ Host: web → Vercel    API → Render    data → Supabase    CI → GitHub Act
 
 ## Multi-tenancy
 
-MVP uses a **shared database with `tenant_id`** on tenant-owned tables. Schema-per-tenant is more isolation than we need and slows every migration. Every API query that returns business data must filter by the JWT `tenant_id`. Email is unique globally so login stays a single lookup.
+MVP uses a **shared database with `tenant_id`** on tenant-owned tables. Schema-per-tenant is more isolation than we need and slows every migration. Every API query that returns business data must filter by the JWT `tenant_id`.
+
+## Identity (Sri Lanka-first)
+
+- **Owners / business creation:** email + password is the default. Google, Facebook, and TikTok OAuth can also create the business (enter the business name first). Callback URLs are `{API}/v1/auth/oauth/{google|facebook|tiktok}/callback`.
+- **Staff:** phone-first. Invite with a Sri Lankan mobile (`077…` stored as `+94…`). Email is optional. Join via password on the invite link, WhatsApp, or the same social providers.
+- Login accepts **email or phone** plus password. Social-only users (no password) sign in through the provider they used.
+- Unique contacts: email and phone are unique when present; several people may have neither if they only use OAuth.
 
 ## Row Level Security (RLS)
 

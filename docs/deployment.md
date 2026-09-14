@@ -47,6 +47,11 @@ Environment variables:
 | `SUPABASE_URL` | `https://fqbxexfiqihtmdfultth.supabase.co` |
 | `DATABASE_URL` | Postgres URI from Supabase. **URL-encode** `#` and `@` in the password (`#` → `%23`, `@` → `%40`) |
 | `JWT_SECRET` | long random string (Render will not share the default) |
+| `WEB_ORIGIN` | `https://srd-biz.vercel.app` (OAuth returns here) |
+| `OAUTH_REDIRECT_BASE` | `https://digital-business-platform.onrender.com` |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google Cloud OAuth client |
+| `FACEBOOK_CLIENT_ID` / `FACEBOOK_CLIENT_SECRET` | Meta app |
+| `TIKTOK_CLIENT_KEY` / `TIKTOK_CLIENT_SECRET` | TikTok Login Kit |
 
 If Render cannot reach the database (IPv6), use Supabase **Session pooler** (port 6543) instead of the direct `db.*:5432` host.
 
@@ -74,8 +79,14 @@ Run `supabase init` only once in this repo (keep files under `supabase/`). Apply
 1. `supabase/migrations/20260913120000_core_tenancy.sql`
 2. `supabase/migrations/20260913130000_enable_rls.sql`
 3. `supabase/migrations/20260913140000_invites.sql`
+4. `supabase/migrations/20260913150000_phone_and_oauth.sql`
 
-Local Postgres via Docker applies both automatically on first `docker compose up`.
+Local Postgres via Docker applies migrations automatically on first `docker compose up`. Later SQL files must be applied with `psql` (or `docker compose down -v` to rebuild).
+
+OAuth provider callback URLs (register all three in each developer console):
+
+- Local: `http://localhost:8000/v1/auth/oauth/{google|facebook|tiktok}/callback`
+- Production: `https://digital-business-platform.onrender.com/v1/auth/oauth/{google|facebook|tiktok}/callback`
 
 ## GitHub Actions
 

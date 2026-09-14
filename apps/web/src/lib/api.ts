@@ -14,7 +14,8 @@ export type Branch = {
 
 export type User = {
   id: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   full_name: string;
   role: string;
   tenant: Tenant;
@@ -23,7 +24,8 @@ export type User = {
 
 export type Member = {
   id: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   full_name: string;
   role: string;
   branch: Branch | null;
@@ -31,7 +33,8 @@ export type Member = {
 
 export type Invite = {
   id: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   role: string;
   branch: Branch | null;
   expires_at: string;
@@ -42,6 +45,12 @@ export type InviteCreated = {
   invite: Invite;
   token: string;
   join_path: string;
+};
+
+export type AuthResponse = {
+  access_token: string;
+  token_type: string;
+  user: User;
 };
 
 export const STAFF_ROLES = [

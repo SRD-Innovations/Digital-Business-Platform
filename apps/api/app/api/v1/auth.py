@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import get_current_user, slugify, unique_slug
 from app.core.db import get_db
+from app.core.phone import looks_like_phone, normalize_lk_phone
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.branch import Branch
 from app.models.tenant import Tenant
@@ -62,13 +63,19 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)) -> TokenRespo
 
 @router.post("/login", response_model=TokenResponse)
 def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    user = db.scalar(
-        select(User)
-        .options(joinedload(User.tenant), joinedload(User.branch))
-        .where(User.email == body.email.lower())
-    )
-    if user is None or not user.is_active or not verify_password(body.password, user.password_hash):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+    identifier = (body.identifier or "").strip()
+    query = select(User).options(joinedload(User.tenant), joinedload(User.branch))
+    if looks_like_phone(identifier):
+        user = db.scalar(query.where(User.phone == normalize_lk_phone(identifier)))
+    else:
+        user = db.scalar(query.where(User.email == identifier.lower()))
+    if (
+        user is None
+        or not user.is_active
+        or not user.password_hash
+        or not verify_password(body.password, user.password_hash)
+    ):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid login or password")
     return _token_for(user)
 
 

@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.api.deps import INVITABLE_BY_ROLE, MANAGE_ROLES, get_current_user, require_roles
 from app.core.db import get_db
+from app.core.phone import normalize_lk_phone
 from app.core.security import create_access_token, hash_invite_token, hash_password
 from app.models.branch import Branch
 from app.models.invite import Invite
@@ -73,18 +74,21 @@ def create_invite(
     if body.role not in allowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You cannot invite that role")
 
-    email = body.email.lower()
-    if db.scalar(select(User.id).where(User.email == email)):
+    email = body.email.lower() if body.email else None
+    phone = normalize_lk_phone(body.phone) if body.phone else None
+    if email and db.scalar(select(User.id).where(User.email == email)):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
-    pending = db.scalar(
-        select(Invite.id).where(
-            Invite.tenant_id == user.tenant_id,
-            Invite.email == email,
-            Invite.accepted_at.is_(None),
-        )
-    )
-    if pending:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Invite already pending for this email")
+    if phone and db.scalar(select(User.id).where(User.phone == phone)):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Phone already registered")
+    pending_filter = [Invite.tenant_id == user.tenant_id, Invite.accepted_at.is_(None)]
+    if email:
+        pending = db.scalar(select(Invite.id).where(*pending_filter, Invite.email == email))
+        if pending:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Invite already pending")
+    if phone:
+        pending = db.scalar(select(Invite.id).where(*pending_filter, Invite.phone == phone))
+        if pending:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Invite already pending")
 
     branch = _branch_for_tenant(db, user.tenant_id, body.branch_id)
     raw_token = token_urlsafe(32)
@@ -93,6 +97,7 @@ def create_invite(
         branch_id=branch.id if branch else None,
         invited_by_user_id=user.id,
         email=email,
+        phone=phone,
         role=body.role,
         token_hash=hash_invite_token(raw_token),
         expires_at=datetime.now(UTC) + timedelta(days=7),
@@ -122,13 +127,16 @@ def accept_invite(body: InviteAccept, db: Session = Depends(get_db)) -> TokenRes
         expires = expires.replace(tzinfo=UTC)
     if expires < datetime.now(UTC):
         raise HTTPException(status_code=status.HTTP_410_GONE, detail="Invite has expired")
-    if db.scalar(select(User.id).where(User.email == invite.email)):
+    if invite.email and db.scalar(select(User.id).where(User.email == invite.email)):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
+    if invite.phone and db.scalar(select(User.id).where(User.phone == invite.phone)):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Phone already registered")
 
     member = User(
         tenant_id=invite.tenant_id,
         branch_id=invite.branch_id,
         email=invite.email,
+        phone=invite.phone,
         password_hash=hash_password(body.password),
         full_name=body.full_name.strip(),
         role=invite.role,

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 class RegisterRequest(BaseModel):
@@ -11,8 +11,17 @@ class RegisterRequest(BaseModel):
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    identifier: str | None = Field(default=None, max_length=320)
+    email: EmailStr | None = None
     password: str = Field(min_length=8, max_length=128)
+
+    @model_validator(mode="after")
+    def require_identifier(self) -> "LoginRequest":
+        ident = (self.identifier or (str(self.email) if self.email else "")).strip()
+        if len(ident) < 3:
+            raise ValueError("Email or phone is required")
+        self.identifier = ident
+        return self
 
 
 class TenantOut(BaseModel):
@@ -32,7 +41,8 @@ class BranchOut(BaseModel):
 
 class UserOut(BaseModel):
     id: str
-    email: str
+    email: str | None = None
+    phone: str | None = None
     full_name: str
     role: str
     tenant: TenantOut
@@ -53,7 +63,8 @@ class BranchCreate(BaseModel):
 
 class MemberOut(BaseModel):
     id: str
-    email: str
+    email: str | None = None
+    phone: str | None = None
     full_name: str
     role: str
     branch: BranchOut | None = None
@@ -62,14 +73,29 @@ class MemberOut(BaseModel):
 
 
 class InviteCreate(BaseModel):
-    email: EmailStr
+    email: EmailStr | None = None
+    phone: str | None = None
     role: str
     branch_id: str | None = None
+
+    @field_validator("email", "phone", mode="before")
+    @classmethod
+    def blank_to_none(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
+    @model_validator(mode="after")
+    def require_contact(self) -> "InviteCreate":
+        if not self.email and not self.phone:
+            raise ValueError("Phone number or email is required")
+        return self
 
 
 class InviteOut(BaseModel):
     id: str
-    email: str
+    email: str | None = None
+    phone: str | None = None
     role: str
     branch: BranchOut | None = None
     expires_at: datetime
