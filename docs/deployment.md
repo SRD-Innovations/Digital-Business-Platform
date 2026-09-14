@@ -83,6 +83,7 @@ Run `supabase init` only once in this repo (keep files under `supabase/`). Apply
 5. `supabase/migrations/20260914140000_pos_online.sql`
 6. `supabase/migrations/20260914150000_pos_shifts_park_returns.sql`
 7. `supabase/migrations/20260914160000_offline_sync_ops.sql`
+8. `supabase/migrations/20260914170000_erp_core.sql`
 
 Local Postgres via Docker applies migrations automatically on first `docker compose up`. Later SQL files must be applied with `psql` (or `docker compose down -v` to rebuild).
 

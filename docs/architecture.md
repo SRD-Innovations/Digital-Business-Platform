@@ -73,4 +73,4 @@ Local store: IndexedDB (hand-rolled stores for catalog + pending checkout ops; D
 
 ## What this branch is not
 
-Custom per-module permissions, password reset, email delivery of invites, social OAuth app keys, field-level conflict UI, offline void/return/park/shift open, real thermal WebUSB printers, loyalty, and SMS receipts.
+Custom per-module permissions, password reset, email delivery of invites, social OAuth app keys, field-level conflict UI, offline void/return/park/shift open, full accounting ledgers / bank reconciliation / VAT returns, branch stock transfers, real thermal WebUSB printers, loyalty, and SMS receipts.

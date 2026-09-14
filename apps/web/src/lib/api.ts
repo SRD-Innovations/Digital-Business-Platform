@@ -128,6 +128,61 @@ export type ParkedBill = {
   created_at: string;
 };
 
+export type Supplier = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  note: string | null;
+  is_active: boolean;
+  created_at: string;
+};
+
+export type PurchaseReceiptLine = {
+  id: string;
+  product_id: string;
+  quantity: string;
+  unit_cost: string;
+};
+
+export type PurchaseReceipt = {
+  id: string;
+  supplier_id: string;
+  branch_id: string | null;
+  received_by_user_id: string;
+  status: string;
+  note: string | null;
+  received_at: string;
+  lines: PurchaseReceiptLine[];
+};
+
+export type InventoryMovement = {
+  id: string;
+  product_id: string;
+  quantity: string;
+  reason: string;
+  ref_type: string | null;
+  ref_id: string | null;
+  note: string | null;
+  created_by_user_id: string | null;
+  created_at: string;
+};
+
+export type SalesReport = {
+  from_date: string | null;
+  to_date: string | null;
+  completed_sales: number;
+  gross_total: string;
+  by_day: { day: string; sale_count: number; total: string }[];
+  top_products: {
+    product_id: string | null;
+    product_name: string;
+    quantity: string;
+    revenue: string;
+  }[];
+  by_payment: { method: string; amount: string }[];
+};
+
 export const STAFF_ROLES = [
   "manager",
   "cashier",
