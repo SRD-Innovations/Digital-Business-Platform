@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from app.api.v1.auth import router as auth_router
+from app.api.v1.billing import router as billing_router
 from app.api.v1.branches import router as branches_router
 from app.api.v1.erp import router as erp_router
 from app.api.v1.health import router as health_router
@@ -20,3 +21,4 @@ api_v1.include_router(pos_router)
 api_v1.include_router(erp_router)
 api_v1.include_router(trade_router)
 api_v1.include_router(manufacturing_router)
+api_v1.include_router(billing_router)

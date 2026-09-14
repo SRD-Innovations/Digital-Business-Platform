@@ -1,4 +1,5 @@
 from app.models.base import Base
+from app.models.billing import Plan, Subscription
 from app.models.branch import Branch
 from app.models.invite import Invite
 from app.models.inventory_movement import InventoryMovement
@@ -24,6 +25,7 @@ __all__ = [
     "InventoryMovement",
     "OAuthAccount",
     "ParkedBill",
+    "Plan",
     "PriceTier",
     "Product",
     "ProductBatch",
@@ -35,6 +37,7 @@ __all__ = [
     "SaleLine",
     "SalePayment",
     "Shift",
+    "Subscription",
     "Supplier",
     "SupplierPrice",
     "SyncConflict",

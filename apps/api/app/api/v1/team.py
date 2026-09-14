@@ -74,6 +74,10 @@ def create_invite(
     if body.role not in allowed:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You cannot invite that role")
 
+    from app.services.billing import assert_can_add_user
+
+    assert_can_add_user(db, user.tenant_id)
+
     email = body.email.lower() if body.email else None
     phone = normalize_lk_phone(body.phone) if body.phone else None
     if email and db.scalar(select(User.id).where(User.email == email)):

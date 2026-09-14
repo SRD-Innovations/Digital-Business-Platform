@@ -45,6 +45,7 @@ class UserOut(BaseModel):
     phone: str | None = None
     full_name: str
     role: str
+    is_platform_admin: bool = False
     tenant: TenantOut
     branch: BranchOut | None = None
 
