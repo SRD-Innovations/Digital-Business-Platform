@@ -141,3 +141,57 @@ export function IconTruck({ className }: IconProps) {
     </svg>
   );
 }
+
+export function IconHome({ className }: IconProps) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconLogout({ className }: IconProps) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+      <path d="M14 8l4 4-4 4M18 12H9" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconBuilding({ className }: IconProps) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M4 20V6a2 2 0 0 1 2-2h7v16H4Z" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M13 10h5a2 2 0 0 1 2 2v8h-7V10Z" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M7 8h2M7 12h2M7 16h2M16 14h2M16 17h2" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconStore({ className }: IconProps) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M4 9 5.5 4h13L20 9" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="M4 9h16v11H4V9Z" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M9 20v-6h6v6" stroke="currentColor" strokeWidth="1.75" />
+    </svg>
+  );
+}
+
+export function IconShield({ className }: IconProps) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M12 3 5 6v5c0 4.5 3 8.2 7 9.5 4-1.3 7-5 7-9.5V6l-7-3Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconLayers({ className }: IconProps) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="m12 4 8 4-8 4-8-4 8-4Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
+      <path d="m4 12 8 4 8-4M4 16l8 4 8-4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}

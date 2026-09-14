@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 
 import { SESSION_EVENT, clearSession, getStoredUser } from "@/lib/auth";
 import type { User } from "@/lib/api";
+import { IconHome, IconLogout } from "@/components/Icons";
 
 export function SiteHeader() {
   const pathname = usePathname();
@@ -47,7 +48,9 @@ export function SiteHeader() {
         className="brand"
         title={user ? user.tenant.name : "BizNet"}
       >
-        {user ? brandLabel : (
+        {user ? (
+          brandLabel
+        ) : (
           <>
             Biz<span>Net</span>
           </>
@@ -56,12 +59,22 @@ export function SiteHeader() {
       <nav className="nav">
         {user ? (
           <>
-            <span className="user-chip" title={user.full_name}>
-              {user.full_name}
-            </span>
-            <Link href="/dashboard">Home</Link>
-            <button type="button" className="link-button" onClick={signOut}>
-              Sign out
+            <Link
+              href="/dashboard"
+              className="icon-btn"
+              title="Home"
+              aria-label="Home"
+            >
+              <IconHome />
+            </Link>
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={signOut}
+              title="Sign out"
+              aria-label="Sign out"
+            >
+              <IconLogout />
             </button>
           </>
         ) : (

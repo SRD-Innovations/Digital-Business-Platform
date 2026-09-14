@@ -1191,14 +1191,14 @@ h2 {
 
 @media (min-width: 960px) {
   .app-frame {
-    grid-template-columns: 15.5rem 1fr;
+    grid-template-columns: 4.25rem 1fr;
   }
 }
 
 .app-nav {
   display: flex;
   gap: 0.35rem;
-  padding: 0.85rem 1rem;
+  padding: 0.7rem 0.85rem;
   overflow-x: auto;
   border-bottom: 1px solid var(--border);
   background: rgba(250, 248, 244, 0.7);
@@ -1207,75 +1207,73 @@ h2 {
   scrollbar-width: thin;
 }
 
-.app-nav-group {
-  display: contents;
+.app-nav-icons {
+  align-items: center;
 }
 
 @media (min-width: 960px) {
-  .app-nav {
+  .app-nav-icons {
     flex-direction: column;
     overflow-x: visible;
+    overflow-y: auto;
     border-bottom: 0;
     border-right: 1px solid var(--border);
-    padding: 1.25rem 0.85rem;
+    padding: 0.85rem 0.55rem;
     position: sticky;
     top: var(--header-h);
     height: calc(100vh - var(--header-h));
     align-self: start;
-  }
-
-  .app-nav-group {
-    display: flex;
-    flex-direction: column;
     gap: 0.35rem;
-  }
-
-  .app-nav-group + .app-nav-group {
-    margin-top: 0.85rem;
   }
 }
 
-.app-nav a {
+.app-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  text-decoration: none;
-  color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 500;
-  padding: 0.55rem 0.8rem;
+  width: 2.65rem;
+  height: 2.65rem;
   border-radius: var(--radius-sm);
-  white-space: nowrap;
+  color: var(--muted);
+  text-decoration: none;
   transition: background 0.15s ease, color 0.15s ease;
 }
 
-.app-nav a:hover {
+.app-nav-icon:hover {
   color: var(--ink);
-  background: rgba(11, 18, 32, 0.04);
+  background: rgba(11, 18, 32, 0.05);
 }
 
-.app-nav a[data-active="true"] {
+.app-nav-icon[data-active="true"] {
   color: var(--accent-ink);
   background: var(--accent-soft);
-  font-weight: 600;
 }
 
-.app-nav-label {
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover {
+  color: var(--ink);
+  background: rgba(11, 18, 32, 0.05);
+}
+
+.app-nav-group,
+.app-nav-label,
+.app-nav a:not(.app-nav-icon) {
   display: none;
-  margin: 0.35rem 0.8rem 0.5rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--sand-deep);
-}
-
-@media (min-width: 960px) {
-  .app-nav-label {
-    display: block;
-  }
-
-  .app-nav-label:not(:first-child) {
-    margin-top: 0;
-  }
 }
 
 .app-main {
