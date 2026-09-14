@@ -59,6 +59,36 @@ export default function DashboardPage() {
               </p>
             </div>
           ) : null}
+          {(user.role === "owner" ||
+            user.role === "manager" ||
+            user.role === "stock_keeper" ||
+            user.role === "accountant") ? (
+            <div className="panel">
+              <p className="panel-label">ERP</p>
+              <p className="muted">Suppliers, stock receipts, inventory movements, and sales totals.</p>
+              <p className="form-foot">
+                {(user.role === "owner" || user.role === "manager" || user.role === "stock_keeper") && (
+                  <>
+                    <Link href="/dashboard/suppliers">Suppliers</Link>
+                    {" · "}
+                    <Link href="/dashboard/purchases">Purchases</Link>
+                    {" · "}
+                    <Link href="/dashboard/inventory">Inventory</Link>
+                  </>
+                )}
+                {(user.role === "owner" || user.role === "manager") && " · "}
+                {(user.role === "owner" || user.role === "manager" || user.role === "accountant") && (
+                  <Link href="/dashboard/reports/sales">Sales report</Link>
+                )}
+                {user.role === "accountant" && (
+                  <>
+                    {" · "}
+                    <Link href="/dashboard/inventory">Inventory</Link>
+                  </>
+                )}
+              </p>
+            </div>
+          ) : null}
           <div className="panel">
             <p className="panel-label">Branches</p>
             <ul className="row-list">

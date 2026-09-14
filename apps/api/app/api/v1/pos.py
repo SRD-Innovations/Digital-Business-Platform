@@ -28,6 +28,7 @@ from app.schemas.pos import (
     ShiftOpen,
     ShiftOut,
 )
+from app.services.inventory import apply_stock_change
 
 POS_ROLES = ("owner", "manager", "cashier")
 CATALOG_ROLES = ("owner", "manager", "stock_keeper")
@@ -149,9 +150,21 @@ def create_product(
         sku=sku,
         barcode=barcode,
         unit_price=body.unit_price,
-        stock_on_hand=body.stock_on_hand,
+        stock_on_hand=Decimal("0"),
     )
     db.add(product)
+    db.flush()
+    if body.stock_on_hand > 0:
+        apply_stock_change(
+            db,
+            product=product,
+            quantity_delta=body.stock_on_hand,
+            reason="opening",
+            user_id=user.id,
+            ref_type="product",
+            ref_id=product.id,
+            note="Opening stock",
+        )
     db.commit()
     db.refresh(product)
     return product
@@ -184,7 +197,22 @@ def update_product(
         exclude_id=product.id,
     )
     for key, value in data.items():
+        if key == "stock_on_hand":
+            continue
         setattr(product, key, value)
+    if "stock_on_hand" in data:
+        delta = Decimal(data["stock_on_hand"]) - product.stock_on_hand
+        if delta != 0:
+            apply_stock_change(
+                db,
+                product=product,
+                quantity_delta=delta,
+                reason="adjustment",
+                user_id=user.id,
+                ref_type="product",
+                ref_id=product.id,
+                note="Catalog stock edit",
+            )
     db.commit()
     db.refresh(product)
     return product
@@ -382,11 +410,6 @@ def checkout(
     subtotal = Decimal("0")
     for line in body.lines:
         product = by_id[line.product_id]
-        if product.stock_on_hand < line.quantity:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Not enough stock for {product.name}",
-            )
         line_total = (product.unit_price * line.quantity).quantize(Decimal("0.01"))
         subtotal += line_total
         sale_lines.append(
@@ -398,7 +421,6 @@ def checkout(
                 line_total=line_total,
             )
         )
-        product.stock_on_hand = product.stock_on_hand - line.quantity
 
     discount = body.discount_total
     if discount > subtotal:
@@ -436,6 +458,17 @@ def checkout(
         payments=[SalePayment(method=p.method, amount=p.amount) for p in body.payments],
     )
     db.add(sale)
+    db.flush()
+    for line in body.lines:
+        apply_stock_change(
+            db,
+            product=by_id[line.product_id],
+            quantity_delta=-line.quantity,
+            reason="sale",
+            user_id=user.id,
+            ref_type="sale",
+            ref_id=sale.id,
+        )
     if body.parked_bill_id:
         parked = db.scalar(
             select(ParkedBill).where(
@@ -467,7 +500,15 @@ def void_sale(
                 select(Product).where(Product.id == line.product_id, Product.tenant_id == user.tenant_id)
             )
             if product:
-                product.stock_on_hand = product.stock_on_hand + line.quantity
+                apply_stock_change(
+                    db,
+                    product=product,
+                    quantity_delta=line.quantity,
+                    reason="void",
+                    user_id=user.id,
+                    ref_type="sale",
+                    ref_id=sale.id,
+                )
 
     if sale.shift_id:
         shift = db.scalar(select(Shift).where(Shift.id == sale.shift_id, Shift.tenant_id == user.tenant_id))
@@ -539,7 +580,15 @@ def return_sale(
                 select(Product).where(Product.id == source.product_id, Product.tenant_id == user.tenant_id)
             )
             if product:
-                product.stock_on_hand = product.stock_on_hand + selection.quantity
+                apply_stock_change(
+                    db,
+                    product=product,
+                    quantity_delta=selection.quantity,
+                    reason="return",
+                    user_id=user.id,
+                    ref_type="sale",
+                    ref_id=original.id,
+                )
 
     total = subtotal.quantize(Decimal("0.01"))
     if original.shift_id:

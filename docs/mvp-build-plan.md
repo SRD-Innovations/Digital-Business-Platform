@@ -35,4 +35,4 @@ Split a row if the PR would be too large (e.g. `feature/pos-checkout` then `feat
 
 ## Next concrete slice
 
-`feature/offline-sync` first cut: IndexedDB catalog cache, checkout op queue with idempotent `client_op_id`, last-synced UI on POS, and a production app-shell service worker. Conflict rules remain last-write / retry with a `sync_conflicts` table stub. Next after this branch: `feature/erp-core`.
+`feature/erp-core` first cut: suppliers, purchase receive into stock, inventory movement log (including POS sale/void/return), stock adjustments, and a sales report. Ledgers, bank recon, branch transfers, and full VAT/P&L wait for a follow-up. Next after this branch: `feature/module-trade`.
