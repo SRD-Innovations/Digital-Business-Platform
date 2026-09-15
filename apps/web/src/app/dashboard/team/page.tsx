@@ -153,7 +153,10 @@ export default function TeamPage() {
             <p className="panel-label">Invite staff</p>
             <label>
               Mobile number
-              <input name="phone" placeholder="0771234567" inputMode="tel" autoComplete="tel" />
+              <span className="phone-field">
+                <span className="phone-prefix">+94</span>
+                <input name="phone" placeholder="77 123 4567" inputMode="tel" autoComplete="tel" />
+              </span>
             </label>
             <label>
               Email (optional)

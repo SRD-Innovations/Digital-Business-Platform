@@ -24,21 +24,17 @@ import {
   readSyncStatus,
   type SyncStatus,
 } from "@/lib/offline/sync";
+import { SyncIndicator, syncUiState } from "@/components/SyncIndicator";
+import { IconMinus, IconPlus } from "@/components/Icons";
+import { stockBadgeClass, stockLabel, stockTone } from "@/lib/stock";
 
 type CartLine = { product: Product; quantity: number };
 type PayRow = { method: "cash" | "card" | "credit"; amount: string };
+type CatalogFilter = "all" | "in-stock" | "low-stock" | "out-of-stock";
+type CartMode = "sale" | "return";
 
 function money(value: number): string {
   return value.toFixed(2);
-}
-
-function formatSynced(iso: string | null): string {
-  if (!iso) return "never";
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return iso;
-  }
 }
 
 export default function PosPage() {
@@ -48,6 +44,8 @@ export default function PosPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<CatalogFilter>("all");
+  const [mode, setMode] = useState<CartMode>("sale");
   const [payments, setPayments] = useState<PayRow[]>([{ method: "cash", amount: "" }]);
   const [discount, setDiscount] = useState("0");
   const [shift, setShift] = useState<Shift | null>(null);
@@ -55,9 +53,13 @@ export default function PosPage() {
   const [parkLabel, setParkLabel] = useState("Held");
   const [openingCash, setOpeningCash] = useState("0");
   const [closingCash, setClosingCash] = useState("0");
+  const [shiftModal, setShiftModal] = useState<"open" | "close" | null>(null);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [lastSale, setLastSale] = useState<Sale | null>(null);
+  const [queuedNotice, setQueuedNotice] = useState(false);
+  const [recentSales, setRecentSales] = useState<Sale[]>([]);
+  const [returnSale, setReturnSale] = useState<Sale | null>(null);
   const [activeParkedId, setActiveParkedId] = useState<string | null>(null);
   const [fromCache, setFromCache] = useState(false);
   const [sync, setSync] = useState<SyncStatus>({
@@ -134,14 +136,17 @@ export default function PosPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter(
-      (product) =>
+    return products.filter((product) => {
+      const tone = stockTone(product.stock_on_hand);
+      if (filter !== "all" && tone !== filter) return false;
+      if (!q) return true;
+      return (
         product.name.toLowerCase().includes(q) ||
         (product.sku ?? "").toLowerCase().includes(q) ||
-        (product.barcode ?? "").toLowerCase().includes(q),
-    );
-  }, [products, query]);
+        (product.barcode ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [products, query, filter]);
 
   const subtotal = cart.reduce(
     (sum, line) => sum + Number(line.product.unit_price) * line.quantity,
@@ -150,6 +155,7 @@ export default function PosPage() {
   const discountValue = Math.max(0, Number(discount) || 0);
   const total = Math.max(0, subtotal - discountValue);
   const paid = payments.reduce((sum, row) => sum + (Number(row.amount) || 0), 0);
+  const syncState = syncUiState(sync);
 
   useEffect(() => {
     if (payments.length === 1) {
@@ -158,7 +164,9 @@ export default function PosPage() {
   }, [total]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function addProduct(product: Product) {
+    if (mode === "return") return;
     setLastSale(null);
+    setQueuedNotice(false);
     setError("");
     setCart((current) => {
       const existing = current.find((line) => line.product.id === product.id);
@@ -215,6 +223,7 @@ export default function PosPage() {
         body: JSON.stringify({ opening_cash: openingCash || "0" }),
       });
       setShift(next);
+      setShiftModal(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not open shift");
     } finally {
@@ -237,6 +246,7 @@ export default function PosPage() {
         body: JSON.stringify({ closing_cash: closingCash || "0" }),
       });
       setShift(null);
+      setShiftModal(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Could not close shift");
     } finally {
@@ -285,11 +295,67 @@ export default function PosPage() {
       const product = products.find((item) => item.id === line.product_id);
       if (product) nextCart.push({ product, quantity: Number(line.quantity) });
     }
+    setMode("sale");
+    setReturnSale(null);
     setCart(nextCart);
     setDiscount(String(bill.cart_json.discount_total ?? "0"));
     setActiveParkedId(bill.id);
     setParkLabel(bill.label);
     setError("");
+  }
+
+  async function loadReturns() {
+    if (!token) return;
+    try {
+      const sales = await apiFetch<Sale[]>("/v1/sales", { token });
+      setRecentSales(sales.filter((sale) => sale.status === "completed" && !sale.refund_of_sale_id));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Could not load sales for return");
+    }
+  }
+
+  function enterReturnMode() {
+    setMode("return");
+    setCart([]);
+    setLastSale(null);
+    setQueuedNotice(false);
+    setReturnSale(null);
+    loadReturns().catch(() => undefined);
+  }
+
+  function pickReturn(sale: Sale) {
+    setReturnSale(sale);
+    setCart(
+      sale.lines
+        .map((line) => {
+          const product = products.find((item) => item.id === line.product_id);
+          if (!product) return null;
+          return { product, quantity: Number(line.quantity) };
+        })
+        .filter((line): line is CartLine => Boolean(line)),
+    );
+  }
+
+  async function processReturn() {
+    if (!token || !returnSale) return;
+    setPending(true);
+    setError("");
+    try {
+      const next = await apiFetch<Sale>(`/v1/sales/${returnSale.id}/return`, {
+        method: "POST",
+        token,
+        body: JSON.stringify({ restock: true }),
+      });
+      setLastSale(next);
+      setCart([]);
+      setReturnSale(null);
+      setMode("sale");
+      await refresh(token, user!.tenant.id);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Return failed");
+    } finally {
+      setPending(false);
+    }
   }
 
   async function checkout() {
@@ -313,10 +379,12 @@ export default function PosPage() {
       });
       if (result.sale) {
         setLastSale(result.sale);
+        setQueuedNotice(false);
         setError("");
       } else if (result.queued) {
         setLastSale(null);
-        setError("Sale saved on this device — will sync when online");
+        setQueuedNotice(true);
+        setError("");
       }
       setCart([]);
       setDiscount("0");
@@ -346,256 +414,424 @@ export default function PosPage() {
     return <p className="lede">Loading…</p>;
   }
 
-  return (
-    <main className="shell shell-wide">
-      <p className="eyebrow">{user.tenant.name}</p>
-      <h1>Point of sale</h1>
-      <p className="lede">
-        Open a shift, scan or tap products, take split payments, and print the receipt.
-      </p>
+  const canSell = Boolean(shift) || !sync.online;
 
-      <div className="pos-status">
-        <div>
-          <p className="panel-label">Sync</p>
-          <p className="muted" style={{ margin: 0 }}>
-            {sync.online ? "Online" : "Offline"}
-            {" · "}
-            pending {sync.pendingCount}
-            {" · "}
-            last synced {formatSynced(sync.lastSyncedAt)}
-            {fromCache ? " · catalog from this device" : ""}
-          </p>
-          {sync.lastError ? <p className="form-error">{sync.lastError}</p> : null}
-        </div>
+  return (
+    <div className="pos-workspace">
+      <div className="pos-toolbar">
+        <SyncIndicator sync={sync} fromCache={fromCache} />
         <button
           type="button"
           className="btn btn-secondary"
-          disabled={!token || !sync.online || sync.pendingCount === 0}
-          onClick={() => token && tryFlush(token, user.tenant.id)}
+          onClick={() => setShiftModal(shift ? "close" : "open")}
         >
-          Sync now
+          {shift ? `Shift open · Rs ${shift.opening_cash}` : "Open shift"}
         </button>
-        <div style={{ flex: "1 1 12rem" }}>
-          <p className="panel-label">Shift</p>
-          {shift ? (
-            <p className="muted" style={{ margin: 0 }}>
-              Open · opening Rs {shift.opening_cash} · cash sales Rs {shift.cash_sales_total}
-            </p>
-          ) : (
-            <p className="muted" style={{ margin: 0 }}>
-              No open shift{!sync.online ? " — open one while online first" : ""}
-            </p>
-          )}
-        </div>
-        {shift ? (
-          <div className="home-actions" style={{ marginTop: 0 }}>
-            <input
-              className="qty-input"
-              style={{ width: "7rem" }}
-              value={closingCash}
-              onChange={(e) => setClosingCash(e.target.value)}
-              aria-label="Closing cash"
-              placeholder="Close cash"
-            />
-            <button className="btn btn-secondary" type="button" disabled={pending} onClick={closeShift}>
-              Close shift
-            </button>
-          </div>
-        ) : (
-          <div className="home-actions" style={{ marginTop: 0 }}>
-            <input
-              className="qty-input"
-              style={{ width: "7rem" }}
-              value={openingCash}
-              onChange={(e) => setOpeningCash(e.target.value)}
-              aria-label="Opening cash"
-              placeholder="Open cash"
-            />
-            <button className="btn" type="button" disabled={pending || !sync.online} onClick={openShift}>
-              Open shift
-            </button>
-          </div>
-        )}
+        {sync.pendingCount > 0 && sync.online ? (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={!token || sync.flushing}
+            onClick={() => token && tryFlush(token, user.tenant.id)}
+          >
+            Sync now
+          </button>
+        ) : null}
+        <label className="pos-search">
+          <span className="visually-hidden">Search</span>
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            onKeyDown={onSearchKeyDown}
+            placeholder="Search or scan barcode, then Enter"
+            autoComplete="off"
+            aria-label="Search name, SKU, or barcode"
+          />
+        </label>
       </div>
 
-      <div className="pos-grid">
-        <div className="stack">
-          <label className="panel form">
-            Search name, SKU, or barcode
-            <input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              onKeyDown={onSearchKeyDown}
-              placeholder="Type to filter, or scan + Enter"
-              autoComplete="off"
-            />
-          </label>
-          <div className="panel">
-            <p className="panel-label">Products</p>
+      {syncState === "conflict" ? (
+        <div className="banner banner-danger" style={{ margin: "8px 12px 0" }}>
+          <span>
+            Last-write-loses conflict. The server copy was kept. Review the queued sale, then sync
+            again. {sync.lastError}
+          </span>
+        </div>
+      ) : null}
+
+      <div className="pos-body">
+        <section className="pos-catalog" aria-label="Catalog">
+          <div className="chip-row">
+            {(
+              [
+                ["all", "All"],
+                ["in-stock", "In stock"],
+                ["low-stock", "Low"],
+                ["out-of-stock", "Out"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className="chip"
+                data-active={filter === id ? "true" : "false"}
+                onClick={() => setFilter(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="pos-catalog-scroll">
             {filtered.length ? (
               <ul className="product-grid">
-                {filtered.map((product) => (
-                  <li key={product.id}>
-                    <button
-                      type="button"
-                      className="product-tile"
-                      onClick={() => addProduct(product)}
-                      disabled={!shift && sync.online}
-                    >
-                      <span>{product.name}</span>
-                      <span className="muted">Rs {product.unit_price}</span>
-                      <span className="muted">Stock {product.stock_on_hand}</span>
-                    </button>
-                  </li>
-                ))}
+                {filtered.map((product) => {
+                  const tone = stockTone(product.stock_on_hand);
+                  return (
+                    <li key={product.id}>
+                      <button
+                        type="button"
+                        className="product-tile"
+                        data-stock={tone}
+                        onClick={() => addProduct(product)}
+                        disabled={!canSell || tone === "out-of-stock" || mode === "return"}
+                      >
+                        <strong>{product.name}</strong>
+                        <span className="muted">Rs {product.unit_price}</span>
+                        <span className={stockBadgeClass(tone)}>
+                          {stockLabel(tone)} · {product.stock_on_hand}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             ) : (
               <p className="muted">
-                No matching products.{" "}
-                <Link href="/dashboard/products">Add products</Link>
+                No matching products. <Link href="/dashboard/products">Add products</Link>
               </p>
             )}
           </div>
-          <div className="panel">
-            <p className="panel-label">Parked bills</p>
-            {parked.length ? (
-              <ul className="row-list">
-                {parked.map((bill) => (
-                  <li key={bill.id}>
-                    <button type="button" className="btn btn-secondary" onClick={() => resumeParked(bill)}>
-                      Resume {bill.label}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted">None held</p>
-            )}
-          </div>
-        </div>
+        </section>
 
-        <div className="pos-cart-sticky stack">
-          <div className="panel">
-            <p className="panel-label">Cart</p>
-            {cart.length ? (
-              <ul className="row-list">
-                {cart.map((line) => (
-                  <li key={line.product.id}>
-                    <span>
-                      {line.product.name}
-                      <span className="muted"> · Rs {line.product.unit_price}</span>
-                    </span>
-                    <input
-                      className="qty-input"
-                      type="number"
-                      min={1}
-                      value={line.quantity}
-                      onChange={(event) =>
-                        setQuantity(line.product.id, Number(event.target.value) || 0)
-                      }
-                    />
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted">Cart is empty — scan a barcode or tap a product</p>
-            )}
-          </div>
-
-          <div className="panel form">
-            <p className="panel-label">Pay</p>
-            <p>
-              Subtotal <strong>Rs {money(subtotal)}</strong>
-            </p>
-            <label>
-              Discount
-              <input value={discount} onChange={(event) => setDiscount(event.target.value)} />
-            </label>
-            {payments.map((row, index) => (
-              <div key={index} className="pay-row">
-                <select
-                  value={row.method}
-                  onChange={(event) => {
-                    const next = [...payments];
-                    next[index] = {
-                      ...row,
-                      method: event.target.value as PayRow["method"],
-                    };
-                    setPayments(next);
-                  }}
-                >
-                  <option value="cash">Cash</option>
-                  <option value="card">Card</option>
-                  <option value="credit">Credit</option>
-                </select>
-                <input
-                  value={row.amount}
-                  onChange={(event) => {
-                    const next = [...payments];
-                    next[index] = { ...row, amount: event.target.value };
-                    setPayments(next);
-                  }}
-                  placeholder="Amount"
-                />
-              </div>
-            ))}
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setPayments((rows) => [...rows, { method: "card", amount: "" }])}
-            >
-              Add payment split
-            </button>
-            <p>
-              Total <strong>Rs {money(total)}</strong>
-              <span className="muted"> · paid Rs {money(paid)}</span>
-            </p>
-            <label>
-              Hold label
-              <input value={parkLabel} onChange={(e) => setParkLabel(e.target.value)} />
-            </label>
-            {error ? <p className="form-error">{error}</p> : null}
-            <div className="home-actions">
+        <aside className="pos-cart" aria-label="Cart">
+          <div className="pos-cart-head">
+            <div className="chip-row">
               <button
-                className="btn"
                 type="button"
-                disabled={pending || !cart.length || (!shift && sync.online)}
-                onClick={checkout}
+                className="chip"
+                data-active={mode === "sale" ? "true" : "false"}
+                onClick={() => {
+                  setMode("sale");
+                  setReturnSale(null);
+                }}
               >
-                {pending ? "Charging…" : "Complete sale"}
+                Sale
               </button>
               <button
-                className="btn btn-secondary"
                 type="button"
-                disabled={pending || !cart.length || !shift || !sync.online}
-                onClick={parkBill}
+                className="chip"
+                data-active={mode === "return" ? "true" : "false"}
+                onClick={enterReturnMode}
               >
-                Park bill
+                Return
               </button>
             </div>
+            {activeParkedId ? <span className="badge badge-warning">Parked</span> : null}
           </div>
 
-          {lastSale ? (
-            <div className="panel">
-              <p className="panel-label">Last receipt</p>
-              <p>
-                {lastSale.receipt_number} · Rs {lastSale.total}
-              </p>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() =>
-                  printReceipt(lastSale, receiptBusinessFromUser(user), {
-                    cashierName: user.full_name,
-                  })
-                }
-              >
-                Print receipt
-              </button>
+          {parked.length && mode === "sale" ? (
+            <div className="parked-row">
+              {parked.map((bill) => (
+                <button key={bill.id} type="button" className="chip" onClick={() => resumeParked(bill)}>
+                  Resume {bill.label}
+                </button>
+              ))}
             </div>
           ) : null}
-        </div>
+
+          {mode === "return" && !returnSale ? (
+            <div className="pos-cart-lines">
+              {recentSales.length ? (
+                <ul className="row-list">
+                  {recentSales.slice(0, 12).map((sale) => (
+                    <li key={sale.id}>
+                      <span>
+                        <span className="mono">{sale.receipt_number}</span>
+                        <span className="muted"> · Rs {sale.total}</span>
+                      </span>
+                      <button type="button" className="btn btn-secondary" onClick={() => pickReturn(sale)}>
+                        Refund
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="muted">No completed sales to return.</p>
+              )}
+            </div>
+          ) : (
+            <div className="pos-cart-lines">
+              {queuedNotice ? (
+                <div className="banner banner-queued" style={{ margin: "8px 0" }}>
+                  Sale saved on this device — will sync when online.
+                </div>
+              ) : null}
+              {cart.length ? (
+                cart.map((line) => (
+                  <div
+                    key={line.product.id}
+                    className="cart-line"
+                    data-queued={queuedNotice ? "true" : undefined}
+                  >
+                    <div>
+                      <div className="cart-line-name">{line.product.name}</div>
+                      <div className="muted">Rs {line.product.unit_price}</div>
+                    </div>
+                    {mode === "sale" ? (
+                      <div className="qty-stepper">
+                        <button
+                          type="button"
+                          aria-label="Decrease"
+                          onClick={() => setQuantity(line.product.id, line.quantity - 1)}
+                        >
+                          <IconMinus />
+                        </button>
+                        <input
+                          value={line.quantity}
+                          onChange={(event) =>
+                            setQuantity(line.product.id, Number(event.target.value) || 0)
+                          }
+                          inputMode="numeric"
+                          aria-label={`Quantity for ${line.product.name}`}
+                        />
+                        <button
+                          type="button"
+                          aria-label="Increase"
+                          onClick={() => setQuantity(line.product.id, line.quantity + 1)}
+                        >
+                          <IconPlus />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="muted">× {line.quantity}</span>
+                    )}
+                    <strong>Rs {money(Number(line.product.unit_price) * line.quantity)}</strong>
+                  </div>
+                ))
+              ) : (
+                <p className="muted" style={{ padding: "16px 0" }}>
+                  {mode === "return"
+                    ? "Pick a receipt to refund."
+                    : "Cart is empty — scan or tap a product."}
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="pos-cart-foot">
+            {mode === "return" ? (
+              <>
+                {returnSale ? (
+                  <p className="muted" style={{ margin: 0 }}>
+                    Refund <span className="mono">{returnSale.receipt_number}</span> · Rs{" "}
+                    {returnSale.total}
+                  </p>
+                ) : null}
+                {error ? <p className="form-error">{error}</p> : null}
+                <button
+                  className="btn btn-danger btn-block"
+                  type="button"
+                  disabled={pending || !returnSale}
+                  onClick={processReturn}
+                >
+                  {pending ? "Refunding…" : "Process return"}
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="totals-row">
+                  <span>Subtotal</span>
+                  <span>Rs {money(subtotal)}</span>
+                </div>
+                <label>
+                  <span className="muted">Discount</span>
+                  <input
+                    className="qty-input"
+                    style={{ width: "100%" }}
+                    value={discount}
+                    onChange={(event) => setDiscount(event.target.value)}
+                  />
+                </label>
+                <div className="tender-row">
+                  {(["cash", "card", "credit"] as const).map((method) => (
+                    <button
+                      key={method}
+                      type="button"
+                      className="btn btn-secondary"
+                      data-active={payments[0]?.method === method ? "true" : "false"}
+                      onClick={() =>
+                        setPayments((rows) =>
+                          rows.length
+                            ? [{ ...rows[0], method }, ...rows.slice(1)]
+                            : [{ method, amount: money(total) }],
+                        )
+                      }
+                    >
+                      {method}
+                    </button>
+                  ))}
+                </div>
+                {payments.map((row, index) => (
+                  <div key={index} className="pay-row">
+                    <select
+                      value={row.method}
+                      onChange={(event) => {
+                        const next = [...payments];
+                        next[index] = {
+                          ...row,
+                          method: event.target.value as PayRow["method"],
+                        };
+                        setPayments(next);
+                      }}
+                    >
+                      <option value="cash">Cash</option>
+                      <option value="card">Card</option>
+                      <option value="credit">Credit</option>
+                    </select>
+                    <input
+                      value={row.amount}
+                      onChange={(event) => {
+                        const next = [...payments];
+                        next[index] = { ...row, amount: event.target.value };
+                        setPayments(next);
+                      }}
+                      placeholder="Amount"
+                    />
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setPayments((rows) => [...rows, { method: "card", amount: "" }])}
+                >
+                  Add split
+                </button>
+                <div className="totals-row">
+                  <strong>Total</strong>
+                  <strong>Rs {money(total)}</strong>
+                </div>
+                <p className="muted" style={{ margin: 0 }}>
+                  Paid Rs {money(paid)}
+                </p>
+                {error ? <p className="form-error">{error}</p> : null}
+                <button
+                  className="btn btn-block"
+                  type="button"
+                  disabled={pending || !cart.length || !canSell}
+                  onClick={checkout}
+                >
+                  {pending ? "Charging…" : "Charge"}
+                </button>
+                <div className="home-actions" style={{ marginTop: 0 }}>
+                  <input
+                    className="qty-input"
+                    style={{ flex: 1, width: "auto" }}
+                    value={parkLabel}
+                    onChange={(e) => setParkLabel(e.target.value)}
+                    aria-label="Hold label"
+                    placeholder="Hold label"
+                  />
+                  <button
+                    className="btn btn-secondary"
+                    type="button"
+                    disabled={pending || !cart.length || !shift || !sync.online}
+                    onClick={parkBill}
+                  >
+                    Park
+                  </button>
+                </div>
+                {lastSale ? (
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-block"
+                    onClick={() =>
+                      printReceipt(lastSale, receiptBusinessFromUser(user), {
+                        cashierName: user.full_name,
+                      })
+                    }
+                  >
+                    Print {lastSale.receipt_number}
+                  </button>
+                ) : null}
+              </>
+            )}
+          </div>
+        </aside>
       </div>
-    </main>
+
+      {shiftModal ? (
+        <div className="modal-backdrop" role="presentation" onClick={() => setShiftModal(null)}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-labelledby="shift-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {shiftModal === "open" ? (
+              <>
+                <h2 id="shift-title">Open shift</h2>
+                <p className="lede">Count the drawer before the first sale.</p>
+                <label className="form">
+                  Opening cash (LKR)
+                  <input
+                    value={openingCash}
+                    onChange={(e) => setOpeningCash(e.target.value)}
+                    inputMode="decimal"
+                  />
+                </label>
+                {error ? <p className="form-error">{error}</p> : null}
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-ghost" onClick={() => setShiftModal(null)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    disabled={pending || !sync.online}
+                    onClick={openShift}
+                  >
+                    {pending ? "Opening…" : "Open shift"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 id="shift-title">Close shift</h2>
+                <p className="lede">
+                  Cash sales Rs {shift?.cash_sales_total ?? "0"}. Sync pending sales first.
+                </p>
+                <label className="form">
+                  Closing cash (LKR)
+                  <input
+                    value={closingCash}
+                    onChange={(e) => setClosingCash(e.target.value)}
+                    inputMode="decimal"
+                  />
+                </label>
+                {error ? <p className="form-error">{error}</p> : null}
+                <div className="modal-actions">
+                  <button type="button" className="btn btn-ghost" onClick={() => setShiftModal(null)}>
+                    Cancel
+                  </button>
+                  <button type="button" className="btn btn-danger" disabled={pending} onClick={closeShift}>
+                    {pending ? "Closing…" : "Close shift"}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }

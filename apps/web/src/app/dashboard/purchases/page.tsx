@@ -114,7 +114,8 @@ export default function PurchasesPage() {
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Purchases</h1>
         <p className="lede">
-          Receive stock from suppliers. <Link href="/dashboard/suppliers">Suppliers</Link>
+          Receive stock from suppliers. Batch and expiry stay on the receipt when the SKU tracks them.{" "}
+          <Link href="/dashboard/suppliers">Suppliers</Link>
           {" · "}
           <Link href="/dashboard/inventory">Inventory</Link>
         </p>

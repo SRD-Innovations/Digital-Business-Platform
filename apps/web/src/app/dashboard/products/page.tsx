@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import { getStoredUser, getToken } from "@/lib/auth";
 import { canAccessPos } from "@/lib/roles";
+import { expiryBadgeClass, expiryLabel, expiryTone } from "@/lib/stock";
 
 function canEditCatalog(role: string): boolean {
   return role === "owner" || role === "manager" || role === "stock_keeper";
@@ -169,27 +170,59 @@ export default function ProductsPage() {
           <Link href="/dashboard/purchases">Purchases</Link>
         </p>
         <div className="stack">
-          <div className="panel">
-            <p className="panel-label">Catalog</p>
-            {products.length ? (
-              <ul className="row-list">
-                {products.map((product) => (
-                  <li key={product.id}>
-                    <button type="button" className="btn btn-secondary" onClick={() => selectProduct(product)}>
-                      {product.name}
-                      <span className="muted">
-                        {" "}
-                        · Rs {product.unit_price}
-                        {product.track_batches ? " · batches" : ""}
-                      </span>
-                    </button>
-                    <span className="muted">Stock {product.stock_on_hand}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="muted">No products yet. Add your first SKU above to sell in POS.</p>
-            )}
+          <div className="panel" style={{ padding: 0, overflow: "hidden" }}>
+            <div className="data-table-wrap">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {products.length ? (
+                    products.map((product) => {
+                      const selected = selectedId === product.id;
+                      return (
+                        <tr key={product.id} data-tone={selected ? "selected" : undefined}>
+                          <td>
+                            {product.name}
+                            {product.track_batches ? (
+                              <span className="badge badge-trade" style={{ marginLeft: 8 }}>
+                                Batches
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="mono">{product.sku ?? "—"}</td>
+                          <td className="num">Rs {product.unit_price}</td>
+                          <td className="num">{product.stock_on_hand}</td>
+                          <td>
+                            {canEditCatalog(user.role) ? (
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => selectProduct(product)}
+                              >
+                                Tiers / expiry
+                              </button>
+                            ) : null}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="muted">
+                        No products yet. Add your first SKU below to sell in POS.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {selected && canEditCatalog(user.role) ? (
@@ -230,18 +263,24 @@ export default function ProductsPage() {
                   <p className="panel-label">Batches</p>
                   {batches.length ? (
                     <ul className="row-list">
-                      {batches.map((batch) => (
-                        <li key={batch.id}>
-                          <span>
-                            {batch.batch_code}
-                            <span className="muted">
-                              {" "}
-                              · qty {batch.quantity}
-                              {batch.expiry_date ? ` · exp ${batch.expiry_date}` : ""}
+                      {batches.map((batch) => {
+                        const tone = expiryTone(batch.expiry_date);
+                        return (
+                          <li key={batch.id}>
+                            <span>
+                              <span className="mono">{batch.batch_code}</span>
+                              <span className="muted"> · qty {batch.quantity}</span>
                             </span>
-                          </span>
-                        </li>
-                      ))}
+                            {batch.expiry_date ? (
+                              <span className={expiryBadgeClass(tone)}>
+                                {expiryLabel(batch.expiry_date, tone)}
+                              </span>
+                            ) : (
+                              <span className="badge badge-neutral">No expiry</span>
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
                   ) : (
                     <p className="muted">No batches — receive with a batch code</p>

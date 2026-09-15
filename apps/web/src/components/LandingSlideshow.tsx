@@ -19,9 +19,9 @@ export function LandingSlideshow() {
 
       <div className="landing-stage-inner landing-welcome">
         <div className="landing-stage-mid">
-          <p className="landing-welcome-label anim-fade-up">Welcome</p>
+          <p className="landing-welcome-label anim-fade-up">Offline-first POS + ERP</p>
           <h2 className="landing-slide-title anim-fade-up anim-delay-1">
-            Welcome to your Digital Business Platform
+            Checkout, stock, and production for Sri Lankan trade
           </h2>
         </div>
       </div>

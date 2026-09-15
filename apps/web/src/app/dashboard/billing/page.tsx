@@ -77,10 +77,11 @@ export default function BillingPage() {
 
   return (
     <main className="shell shell-wide">
+      <div className="page-head">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Billing</h1>
         <p className="lede">
-          Trial and plan limits for branches / users / modules.{" "}
+          Trial, plan limits, and PayHere checkout.{" "}
           <Link href="/dashboard">Dashboard</Link>
           {user.is_platform_admin ? (
             <>
@@ -89,68 +90,93 @@ export default function BillingPage() {
             </>
           ) : null}
         </p>
+      </div>
 
-        <div className="panel" style={{ marginBottom: "1.25rem" }}>
-          <p className="panel-label">Current subscription</p>
-          {subscription ? (
-            <p>
-              {subscription.plan.name} · {subscription.status}
-              {subscription.trial_ends_at
-                ? ` · trial until ${new Date(subscription.trial_ends_at).toLocaleDateString()}`
-                : ""}
-              <span className="muted">
-                {" "}
-                · max {subscription.plan.max_branches} branches / {subscription.plan.max_users} users
-              </span>
-            </p>
-          ) : (
-            <p className="muted">No subscription</p>
-          )}
+      {subscription?.trial_ends_at && subscription.status === "trialing" ? (
+        <div className="banner banner-warning" style={{ marginBottom: 12 }}>
+          Trial until {new Date(subscription.trial_ends_at).toLocaleDateString()}. Choose a plan to
+          continue after the trial.
         </div>
+      ) : null}
 
-        {canManage(user.role) ? (
-          <>
-            <div className="panel form" style={{ marginBottom: "1.25rem" }}>
-              <p className="panel-label">Billing interval</p>
-              <select value={interval} onChange={(e) => setInterval(e.target.value as "monthly" | "yearly")}>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
-              </select>
-            </div>
-            <div className="panel">
-              <p className="panel-label">Plans</p>
-              <ul className="row-list">
-                {plans.map((plan) => (
-                  <li key={plan.id}>
-                    <span>
-                      {plan.name}
-                      <span className="muted">
-                        {" "}
-                        · Rs {interval === "yearly" ? plan.price_yearly_lkr : plan.price_monthly_lkr}/
-                        {interval === "yearly" ? "yr" : "mo"}
-                        {plan.includes_trade ? " · Trade" : ""}
-                        {plan.includes_manufacturing ? " · Mfg" : ""}
-                      </span>
-                    </span>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      disabled={pending}
-                      onClick={() => choosePlan(plan.code)}
-                    >
-                      Choose
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </>
+      <div className="panel" style={{ marginBottom: 12 }}>
+        <p className="panel-label">Current subscription</p>
+        {subscription ? (
+          <p style={{ margin: 0 }}>
+            {subscription.plan.name} · {subscription.status}
+            <span className="muted">
+              {" "}
+              · max {subscription.plan.max_branches} branches / {subscription.plan.max_users} users
+            </span>
+          </p>
         ) : (
-          <p className="muted">Only owners/managers can change plans.</p>
+          <p className="muted">No subscription</p>
         )}
+      </div>
 
-        {error ? <p className="form-error">{error}</p> : null}
-        {message ? <p className="muted">{message}</p> : null}
-      </main>
+      {canManage(user.role) ? (
+        <>
+          <div className="chip-row" style={{ marginBottom: 12 }}>
+            <button
+              type="button"
+              className="chip"
+              data-active={interval === "monthly" ? "true" : "false"}
+              onClick={() => setInterval("monthly")}
+            >
+              Monthly
+            </button>
+            <button
+              type="button"
+              className="chip"
+              data-active={interval === "yearly" ? "true" : "false"}
+              onClick={() => setInterval("yearly")}
+            >
+              Yearly
+            </button>
+          </div>
+          <div className="plan-grid">
+            {plans.map((plan) => (
+              <div
+                key={plan.id}
+                className="plan-card"
+                data-current={subscription?.plan.code === plan.code ? "true" : "false"}
+              >
+                <p className="panel-label" style={{ margin: 0 }}>
+                  {plan.name}
+                </p>
+                <p className="display-num" style={{ margin: 0 }}>
+                  Rs {interval === "yearly" ? plan.price_yearly_lkr : plan.price_monthly_lkr}
+                </p>
+                <p className="muted" style={{ margin: 0 }}>
+                  per {interval === "yearly" ? "year" : "month"}
+                </p>
+                <div className="chip-row">
+                  {plan.includes_trade ? <span className="badge badge-trade">Trade</span> : null}
+                  {plan.includes_manufacturing ? (
+                    <span className="badge badge-manufacturing">Manufacturing</span>
+                  ) : null}
+                </div>
+                <p className="muted" style={{ margin: 0 }}>
+                  {plan.max_branches} branches · {plan.max_users} users
+                </p>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={pending}
+                  onClick={() => choosePlan(plan.code)}
+                >
+                  {pending ? "Opening…" : "PayHere checkout"}
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <p className="muted">Only owners/managers can change plans.</p>
+      )}
+
+      {error ? <p className="form-error">{error}</p> : null}
+      {message ? <p className="muted">{message}</p> : null}
+    </main>
   );
 }

@@ -86,10 +86,11 @@ export default function SalesPage() {
 
   return (
     <main className="shell shell-wide">
+      <div className="page-head">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Sales</h1>
         <p className="lede">
-          Recent receipts for this business.
+          Recent receipts.
           {canAccessPos(user.role) ? (
             <>
               {" "}
@@ -97,80 +98,102 @@ export default function SalesPage() {
             </>
           ) : null}
         </p>
+      </div>
 
-        {error ? <p className="form-error">{error}</p> : null}
+      {error ? <p className="form-error">{error}</p> : null}
 
-        <div className="panel">
-          <p className="panel-label">History</p>
-          {sales.length ? (
-            <ul className="row-list">
-              {sales.map((sale) => (
-                <li key={sale.id} className="sale-row">
-                  <div>
-                    <strong>{sale.receipt_number}</strong>
-                    <span className="muted">
-                      {" "}
-                      · {sale.status} · Rs {sale.total}
-                    </span>
-                    {sale.refund_of_sale_id ? (
-                      <span className="muted"> · refund</span>
-                    ) : null}
-                    <div className="muted">
-                      {sale.payments.map((p) => `${p.method} ${p.amount}`).join(" · ")}
-                    </div>
-                  </div>
-                  <div className="sale-actions">
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() =>
-                        printReceipt(sale, receiptBusinessFromUser(user), {
-                          cashierName: user.full_name,
-                        })
-                      }
-                    >
-                      Print
-                    </button>
-                    {sale.status === "completed" &&
-                    !sale.refund_of_sale_id &&
-                    !returnedOf.has(sale.id) ? (
-                      <>
-                        <button
-                          type="button"
-                          className="btn btn-secondary"
-                          disabled={pendingId === sale.id}
-                          onClick={() => returnSale(sale.id)}
-                        >
-                          Return
-                        </button>
-                        {canVoid(user.role) ? (
+      <div className="panel" style={{ padding: 0, overflow: "hidden" }}>
+        <div className="data-table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Receipt</th>
+                <th>Status</th>
+                <th>Total</th>
+                <th>Tender</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {sales.length ? (
+                sales.map((sale) => {
+                  const statusClass =
+                    sale.status === "completed"
+                      ? "badge badge-success"
+                      : sale.status === "voided" || sale.refund_of_sale_id
+                        ? "badge badge-danger"
+                        : "badge badge-neutral";
+                  return (
+                    <tr key={sale.id}>
+                      <td className="mono">{sale.receipt_number}</td>
+                      <td>
+                        <span className={statusClass}>
+                          {sale.refund_of_sale_id ? "refund" : sale.status}
+                        </span>
+                      </td>
+                      <td className="num">Rs {sale.total}</td>
+                      <td className="muted">
+                        {sale.payments.map((p) => `${p.method} ${p.amount}`).join(" · ")}
+                      </td>
+                      <td>
+                        <div className="sale-actions">
                           <button
                             type="button"
                             className="btn btn-secondary"
-                            disabled={pendingId === sale.id}
-                            onClick={() => voidSale(sale.id)}
+                            onClick={() =>
+                              printReceipt(sale, receiptBusinessFromUser(user), {
+                                cashierName: user.full_name,
+                              })
+                            }
                           >
-                            Void
+                            Print
                           </button>
-                        ) : null}
+                          {sale.status === "completed" &&
+                          !sale.refund_of_sale_id &&
+                          !returnedOf.has(sale.id) ? (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                disabled={pendingId === sale.id}
+                                onClick={() => returnSale(sale.id)}
+                              >
+                                Return
+                              </button>
+                              {canVoid(user.role) ? (
+                                <button
+                                  type="button"
+                                  className="btn btn-danger"
+                                  disabled={pendingId === sale.id}
+                                  onClick={() => voidSale(sale.id)}
+                                >
+                                  Void
+                                </button>
+                              ) : null}
+                            </>
+                          ) : null}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} className="muted">
+                    No sales yet.
+                    {canAccessPos(user.role) ? (
+                      <>
+                        {" "}
+                        <Link href="/dashboard/pos">Open POS</Link>
                       </>
                     ) : null}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="muted">
-              No sales yet.
-              {canAccessPos(user.role) ? (
-                <>
-                  {" "}
-                  <Link href="/dashboard/pos">Open POS</Link> to make the first sale.
-                </>
-              ) : null}
-            </p>
-          )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      </main>
+      </div>
+    </main>
   );
 }

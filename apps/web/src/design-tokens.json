@@ -1,0 +1,33 @@
+{
+  "color": {
+    "surface-page": "#f3f5f7",
+    "surface-card": "#ffffff",
+    "surface-sunken": "#e8edf1",
+    "text-primary": "#0f1720",
+    "text-secondary": "#3d4a57",
+    "text-muted": "#6b7785",
+    "border-default": "#d5dde4",
+    "border-strong": "#b4c0cb",
+    "accent-default": "#0f6e63",
+    "accent-hover": "#0c5a51",
+    "accent-soft": "#e4f3f1",
+    "status-success": "#0f7a5a",
+    "status-warning": "#b45309",
+    "status-danger": "#be123c",
+    "role-trade": "#0369a1",
+    "role-manufacturing": "#6d28d9"
+  },
+  "type": {
+    "family": "Inter",
+    "mono": "JetBrains Mono",
+    "weights": [400, 500],
+    "display": { "size": 28, "lineHeight": 36 },
+    "heading": { "size": 20, "lineHeight": 28 },
+    "subheading": { "size": 16, "lineHeight": 24 },
+    "body": { "size": 14, "lineHeight": 20 },
+    "caption": { "size": 12, "lineHeight": 16 },
+    "mono-body": { "size": 14, "lineHeight": 20 }
+  },
+  "space": { "base": 4, "scale": [4, 8, 12, 16, 24, 32] },
+  "radius": { "control": 8, "card": 12 }
+}

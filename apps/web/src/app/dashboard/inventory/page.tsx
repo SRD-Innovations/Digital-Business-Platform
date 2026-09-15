@@ -12,6 +12,7 @@ import {
   type User,
 } from "@/lib/api";
 import { getStoredUser, getToken } from "@/lib/auth";
+import { stockBadgeClass, stockLabel, stockTone } from "@/lib/stock";
 
 function canEdit(role: string): boolean {
   return role === "owner" || role === "manager" || role === "stock_keeper";
@@ -93,82 +94,117 @@ export default function InventoryPage() {
 
   return (
     <main className="shell shell-wide">
+      <div className="page-head">
         <p className="eyebrow">{user.tenant.name}</p>
         <h1>Inventory</h1>
         <p className="lede">
-          On-hand stock and movement history. <Link href="/dashboard/purchases">Receive purchases</Link>
+          On-hand stock with low-stock and expiry-ready badges.{" "}
+          <Link href="/dashboard/purchases">Receive purchases</Link>
           {" · "}
           <Link href="/dashboard/products">Products</Link>
         </p>
+      </div>
 
-        <div className="panel">
-          <p className="panel-label">On hand</p>
-          {products.length ? (
-            <ul className="row-list">
+      <div className="panel" style={{ padding: 0, overflow: "hidden" }}>
+        <div className="data-table-wrap">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>SKU</th>
+                <th>On hand</th>
+                <th>Status</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.length ? (
+                products.map((product) => {
+                  const tone = stockTone(product.stock_on_hand);
+                  return (
+                    <tr
+                      key={product.id}
+                      data-tone={tone === "out-of-stock" ? "danger" : tone === "low-stock" ? "low-stock" : undefined}
+                    >
+                      <td>{product.name}</td>
+                      <td className="mono">{product.sku ?? "—"}</td>
+                      <td className="num">{product.stock_on_hand}</td>
+                      <td>
+                        <span className={stockBadgeClass(tone)}>{stockLabel(tone)}</span>
+                        {product.track_batches ? (
+                          <span className="badge badge-trade" style={{ marginLeft: 6 }}>
+                            Batches
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="num">Rs {product.unit_price}</td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={5} className="muted">
+                    No products
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {canEdit(user.role) ? (
+        <form className="panel form" style={{ marginTop: 12 }} onSubmit={onAdjust}>
+          <p className="panel-label">Adjust stock</p>
+          <label>
+            Product
+            <select value={productId} onChange={(e) => setProductId(e.target.value)}>
               {products.map((product) => (
-                <li key={product.id}>
-                  <span>{product.name}</span>
-                  <span className="muted">{product.stock_on_hand}</span>
-                </li>
+                <option key={product.id} value={product.id}>
+                  {product.name}
+                </option>
               ))}
-            </ul>
-          ) : (
-            <p className="muted">No products</p>
-          )}
-        </div>
+            </select>
+          </label>
+          <label>
+            Quantity change (+/−)
+            <input value={delta} onChange={(e) => setDelta(e.target.value)} required />
+          </label>
+          <label>
+            Note
+            <input value={note} onChange={(e) => setNote(e.target.value)} />
+          </label>
+          {error ? <p className="form-error">{error}</p> : null}
+          <button className="btn" type="submit" disabled={pending || !products.length}>
+            {pending ? "Saving…" : "Post adjustment"}
+          </button>
+        </form>
+      ) : error ? (
+        <p className="form-error">{error}</p>
+      ) : null}
 
-        {canEdit(user.role) ? (
-          <form className="panel form" style={{ marginTop: "1.25rem" }} onSubmit={onAdjust}>
-            <p className="panel-label">Adjust stock</p>
-            <label>
-              Product
-              <select value={productId} onChange={(e) => setProductId(e.target.value)}>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Quantity change (+/−)
-              <input value={delta} onChange={(e) => setDelta(e.target.value)} required />
-            </label>
-            <label>
-              Note
-              <input value={note} onChange={(e) => setNote(e.target.value)} />
-            </label>
-            {error ? <p className="form-error">{error}</p> : null}
-            <button className="btn" type="submit" disabled={pending || !products.length}>
-              {pending ? "Saving…" : "Post adjustment"}
-            </button>
-          </form>
-        ) : error ? (
-          <p className="form-error">{error}</p>
-        ) : null}
-
-        <div className="panel" style={{ marginTop: "1.25rem" }}>
-          <p className="panel-label">Recent movements</p>
-          {movements.length ? (
-            <ul className="row-list">
-              {movements.map((row) => (
-                <li key={row.id}>
-                  <span>
-                    {productName(row.product_id)}
-                    <span className="muted">
-                      {" "}
-                      · {row.reason} · {Number(row.quantity) > 0 ? "+" : ""}
-                      {row.quantity}
-                    </span>
+      <div className="panel" style={{ marginTop: 12 }}>
+        <p className="panel-label">Recent movements</p>
+        {movements.length ? (
+          <ul className="row-list">
+            {movements.map((row) => (
+              <li key={row.id}>
+                <span>
+                  {productName(row.product_id)}
+                  <span className="muted">
+                    {" "}
+                    · {row.reason} · {Number(row.quantity) > 0 ? "+" : ""}
+                    {row.quantity}
                   </span>
-                  <span className="muted">{new Date(row.created_at).toLocaleString()}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="muted">No movements yet</p>
-          )}
-        </div>
-      </main>
+                </span>
+                <span className="muted">{new Date(row.created_at).toLocaleString()}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="muted">No movements yet</p>
+        )}
+      </div>
+    </main>
   );
 }

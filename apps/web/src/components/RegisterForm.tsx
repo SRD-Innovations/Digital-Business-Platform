@@ -45,7 +45,7 @@ export function RegisterForm({ idPrefix = "" }: Props) {
 
   return (
     <>
-      <p className="eyebrow">Get started</p>
+      <p className="eyebrow">Owner signup</p>
       <h1>Create business</h1>
       <form className="panel form" onSubmit={onSubmit} id={`${idPrefix}register-form`}>
         <label>

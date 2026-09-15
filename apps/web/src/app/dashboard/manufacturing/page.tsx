@@ -122,12 +122,14 @@ export default function ManufacturingPage() {
 
   return (
     <main className="shell shell-wide">
-        <p className="eyebrow">{user.tenant.name}</p>
-        <h1>Manufacturing</h1>
-        <p className="lede">
-          Bill of materials, conversion runs, yield/wastage, and batch cost.{" "}
-          <Link href="/dashboard/inventory">Inventory</Link>
-        </p>
+        <div className="page-head">
+          <p className="eyebrow">{user.tenant.name}</p>
+          <h1>Manufacturing</h1>
+          <p className="lede">
+            Raw materials feed one finished good. Yield and wastage stay visible on every run.{" "}
+            <Link href="/dashboard/inventory">Inventory</Link>
+          </p>
+        </div>
 
         {error ? <p className="form-error">{error}</p> : null}
 
@@ -172,29 +174,31 @@ export default function ManufacturingPage() {
           </form>
         ) : null}
 
-        <div className="panel" style={{ marginTop: "1.25rem" }}>
+        <div className="panel" style={{ marginTop: 12 }}>
           <p className="panel-label">BOMs</p>
           {boms.length ? (
-            <ul className="row-list">
+            <div className="bom-flow">
               {boms.map((bom) => (
-                <li key={bom.id}>
+                <div key={bom.id} className="bom-flow-row">
                   <span>
-                    {bom.name}
-                    <span className="muted">
-                      {" "}
-                      · {productName(bom.finished_product_id)} · yield {bom.expected_yield_pct}%
-                    </span>
+                    {bom.lines
+                      .map((line) => `${productName(line.component_product_id)} × ${line.quantity_per_output}`)
+                      .join(", ") || "No components"}
+                    <span className="bom-arrow"> → </span>
+                    <strong>{productName(bom.finished_product_id)}</strong>
+                    <span className="muted"> · {bom.name}</span>
                   </span>
-                </li>
+                  <span className="badge badge-manufacturing">Yield {bom.expected_yield_pct}%</span>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
             <p className="muted">No BOMs yet</p>
           )}
         </div>
 
         {canEdit(user.role) ? (
-          <form className="panel form" style={{ marginTop: "1.25rem" }} onSubmit={runProduction}>
+          <form className="panel form" style={{ marginTop: 12 }} onSubmit={runProduction}>
             <p className="panel-label">Run production</p>
             <label>
               BOM
@@ -220,23 +224,36 @@ export default function ManufacturingPage() {
           </form>
         ) : null}
 
-        <div className="panel" style={{ marginTop: "1.25rem" }}>
+        <div className="panel" style={{ marginTop: 12 }}>
           <p className="panel-label">Recent runs</p>
           {runs.length ? (
-            <ul className="row-list">
+            <div className="stack">
               {runs.map((run) => (
-                <li key={run.id}>
-                  <span>
-                    {productName(run.finished_product_id)}
+                <div key={run.id}>
+                  <p style={{ margin: "0 0 8px" }}>
+                    <strong>{productName(run.finished_product_id)}</strong>
                     <span className="muted">
                       {" "}
-                      · out {run.actual_output_qty}/{run.planned_output_qty} · yield {run.yield_pct}% ·
-                      wastage {run.wastage_pct}% · cost/unit Rs {run.unit_cost}
+                      · {run.actual_output_qty}/{run.planned_output_qty} · Rs {run.unit_cost}/unit
                     </span>
-                  </span>
-                </li>
+                  </p>
+                  <div className="yield-pair">
+                    <div className="yield-stat" data-tone="success">
+                      <span>Yield</span>
+                      <p className="display-num" style={{ margin: 0 }}>
+                        {run.yield_pct}%
+                      </p>
+                    </div>
+                    <div className="yield-stat" data-tone="danger">
+                      <span>Wastage</span>
+                      <p className="display-num" style={{ margin: 0 }}>
+                        {run.wastage_pct}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           ) : (
             <p className="muted">No runs yet</p>
           )}

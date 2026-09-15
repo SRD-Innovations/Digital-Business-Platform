@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Figtree, Fraunces } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 
 import { SiteHeader } from "@/components/SiteHeader";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import "./globals.css";
 
-const fraunces = Fraunces({
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  weight: ["400", "500"],
+  variable: "--font-sans",
   display: "swap",
 });
 
-const figtree = Figtree({
+const jetbrains = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-figtree",
+  weight: ["400", "500"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -34,7 +36,7 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${figtree.variable}`}>
+    <html lang="en" className={`${inter.variable} ${jetbrains.variable}`}>
       <body>
         <ServiceWorkerRegister />
         <SiteHeader />

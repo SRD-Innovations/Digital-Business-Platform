@@ -1,31 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 
 import { SESSION_EVENT, clearSession, getStoredUser } from "@/lib/auth";
 import type { User } from "@/lib/api";
+import { isNavActive, moduleForPath, navForUser } from "@/lib/nav";
 import { homePathForUser } from "@/lib/roles";
-import {
-  hydrateSidebar,
-  subscribeSidebar,
-  toggleSidebar,
-} from "@/lib/sidebar";
 import { IconLogout } from "@/components/Icons";
+
+function roleLabel(role: string): string {
+  return role.replaceAll("_", " ");
+}
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
-  const [scrolled, setScrolled] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const onDashboard = pathname.startsWith("/dashboard");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     function refresh() {
       setUser(getStoredUser());
     }
     refresh();
+    setReady(true);
     window.addEventListener(SESSION_EVENT, refresh);
     window.addEventListener("storage", refresh);
     return () => {
@@ -34,17 +33,8 @@ export function SiteHeader() {
     };
   }, [pathname]);
 
-  useEffect(() => {
-    setSidebarCollapsed(hydrateSidebar());
-    return subscribeSidebar(setSidebarCollapsed);
-  }, []);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+  const items = useMemo(() => (user ? navForUser(user) : []), [user]);
+  const authed = ready && Boolean(user);
 
   function signOut() {
     clearSession();
@@ -56,9 +46,13 @@ export function SiteHeader() {
   const homeHref = user ? homePathForUser(user) : "/";
 
   return (
-    <header className="topbar" data-scrolled={scrolled ? "true" : "false"}>
-      <Link href={homeHref} className="brand" title={user ? user.tenant.name : "BizNet"}>
-        {user ? (
+    <header
+      className="topbar"
+      data-authed={authed ? "true" : "false"}
+      data-module={authed ? moduleForPath(pathname) : "none"}
+    >
+      <Link href={authed ? homeHref : "/"} className="brand" title={authed ? brandLabel : "BizNet"}>
+        {authed ? (
           brandLabel
         ) : (
           <>
@@ -66,28 +60,33 @@ export function SiteHeader() {
           </>
         )}
       </Link>
-      <nav className="nav">
-        {user ? (
-          <>
-            {onDashboard ? (
-              <button
-                type="button"
-                className="user-toggle"
-                onClick={() => toggleSidebar()}
-                title={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-                aria-label={sidebarCollapsed ? "Show sidebar" : "Hide sidebar"}
-                aria-pressed={!sidebarCollapsed}
+      {authed && items.length ? (
+        <nav className="appbar-nav" aria-label="Workspace">
+          {items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="appbar-icon"
+                title={item.label}
+                aria-label={item.label}
+                data-active={isNavActive(pathname, item.href) ? "true" : "false"}
+                data-featured={item.featured ? "true" : "false"}
               >
-                {user.full_name}
-                <span className="user-toggle-hint">
-                  {sidebarCollapsed ? "Show menu" : "Hide menu"}
-                </span>
-              </button>
-            ) : (
-              <span className="user-toggle" aria-hidden="true">
-                {user.full_name}
-              </span>
-            )}
+                <Icon />
+              </Link>
+            );
+          })}
+        </nav>
+      ) : null}
+      <nav className="nav">
+        {authed && user ? (
+          <>
+            <span className="user-chip">
+              {user.full_name}
+              <span className="user-chip-role">{roleLabel(user.role)}</span>
+            </span>
             <button
               type="button"
               className="icon-btn"
@@ -98,16 +97,16 @@ export function SiteHeader() {
               <IconLogout />
             </button>
           </>
-        ) : (
+        ) : ready ? (
           <>
             <Link href="/login" className="link-underline">
               Sign in
             </Link>
-            <Link href="/#signup" className="link-underline link-underline-accent">
+            <Link href="/#signup" className="nav-cta">
               Create business
             </Link>
           </>
-        )}
+        ) : null}
       </nav>
     </header>
   );

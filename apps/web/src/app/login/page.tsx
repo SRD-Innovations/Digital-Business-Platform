@@ -43,7 +43,7 @@ export default function LoginPage() {
       <h1>Sign in</h1>
       <form className="panel form" onSubmit={onSubmit}>
         <label>
-          Email or mobile number
+          Email or mobile
           <input
             name="identifier"
             required
